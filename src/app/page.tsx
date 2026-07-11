@@ -1,65 +1,113 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Suspense } from "react";
+import { getAnimeList } from "@/lib/kodik";
+import { AnimeCard } from "@/components/anime/AnimeCard";
+import { AnimeCardSkeleton } from "@/components/anime/AnimeCardSkeleton";
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: "Kurox — Смотреть аниме онлайн бесплатно в хорошем качестве",
+  description:
+    "Kurox — крупнейший каталог аниме онлайн. Смотрите новые серии, популярные тайтлы и классику в HD качестве бесплатно без регистрации.",
+  alternates: { canonical: "/" },
+};
+
+function makeSlug(title?: string, id?: string): string {
+  if (!title) return id || "unknown";
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    title
+      .toLowerCase()
+      .replace(/[^a-zа-яё0-9\s]/gi, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-") || id || "unknown"
+  );
+}
+
+function SkeletonGrid({ count = 12 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+      {Array.from({ length: count }).map((_, i) => (
+        <AnimeCardSkeleton key={i} />
+      ))}
     </div>
   );
 }
+
+async function PopularSection() {
+  const data = await getAnimeList({ limit: 12 });
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold">Популярное сейчас</h2>
+        <Link href="/anime?sort=popular" className="text-sm text-purple-400 hover:underline">Все →</Link>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        {data.results.map((anime) => (
+          <AnimeCard key={anime.id} id={anime.id}
+            slug={makeSlug(anime.material_data?.title, anime.id)}
+            title={anime.material_data?.title || anime.title}
+            poster={anime.material_data?.poster_url}
+            year={anime.material_data?.year || anime.year}
+            type={anime.type === "anime-serial" ? "ТВ" : "Фильм"}
+            rating={anime.material_data?.shikimori_rating} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+async function NewEpisodesSection() {
+  const data = await getAnimeList({ limit: 6 });
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold">Новые эпизоды</h2>
+        <Link href="/anime?sort=new" className="text-sm text-purple-400 hover:underline">Все →</Link>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        {data.results.map((anime) => (
+          <AnimeCard key={anime.id} id={anime.id}
+            slug={makeSlug(anime.material_data?.title, anime.id)}
+            title={anime.material_data?.title || anime.title}
+            poster={anime.material_data?.poster_url}
+            year={anime.material_data?.year || anime.year}
+            type={anime.type === "anime-serial" ? "ТВ" : "Фильм"}
+            rating={anime.material_data?.shikimori_rating} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-12">
+      <section className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-purple-900 via-gray-900 to-gray-900 p-8 md:p-12">
+        <div className="relative z-10">
+          <h1 className="text-3xl md:text-5xl font-black mb-4">Смотри аниме<br /><span className="text-purple-400">без ограничений</span></h1>
+          <p className="text-gray-300 text-lg mb-6 max-w-xl">Тысячи тайтлов, новые серии каждый день, удобный плеер и быстрая загрузка.</p>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/anime" className="bg-purple-600 hover:bg-purple-500 text-white px-6 py-3 rounded-xl font-semibold transition-colors">Смотреть каталог</Link>
+            <Link href="/anime?sort=new" className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors">Новинки</Link>
+          </div>
+        </div>
+      </section>
+      <Suspense fallback={<div><div className="h-7 bg-gray-800 rounded w-48 mb-4 animate-pulse" /><SkeletonGrid count={12} /></div>}>
+        <PopularSection />
+      </Suspense>
+      <Suspense fallback={<div><div className="h-7 bg-gray-800 rounded w-48 mb-4 animate-pulse" /><SkeletonGrid count={6} /></div>}>
+        <NewEpisodesSection />
+      </Suspense>
+      <section className="bg-gray-900 rounded-2xl p-6 md:p-8">
+        <h2 className="text-xl font-bold mb-4">Аниме онлайн на Kurox</h2>
+        <div className="text-gray-400 text-sm leading-relaxed space-y-3">
+          <p><strong className="text-gray-200">Kurox</strong> — это современный сайт для просмотра аниме онлайн бесплатно. Обширная библиотека с русской озвучкой и субтитрами.</p>
+          <p>Найдёте классику — «Наруто», «Bleach», «Атака Титанов» — и свежие новинки сезона. Каталог пополняется сразу после выхода в Японии.</p>
+          <p>Быстрая загрузка, адаптивный дизайн, сохранение прогресса и персональные рекомендации. Premium убирает рекламу и открывает доп. возможности.</p>
+        </div>
+      </section>
+    </div>
+  );
+}
+

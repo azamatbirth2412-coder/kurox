@@ -1,0 +1,239 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(USER)
+  isPremium     Boolean   @default(false)
+  premiumUntil  DateTime?
+  telegramId    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts     Account[]
+  sessions     Session[]
+  favorites    Favorite[]
+  watchHistory WatchHistory[]
+  comments     Comment[]
+  ratings      Rating[]
+  subscription Subscription?
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Anime {
+  id              String      @id @default(cuid())
+  kodikId         String      @unique
+  shikimoriId     Int?        @unique
+  slug            String      @unique
+  title           String
+  titleEn         String?
+  titleJa         String?
+  description     String?     @db.Text
+  poster          String?
+  banner          String?
+  year            Int?
+  status          AnimeStatus @default(ONGOING)
+  type            AnimeType   @default(TV)
+  genres          String[]
+  studios         String[]
+  rating          Float?
+  shikimoriRating Float?
+  episodesTotal   Int?
+  episodesAired   Int?
+  season          String?
+  isHidden        Boolean     @default(false)
+  viewsCount      Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  views        View[]
+  favorites    Favorite[]
+  watchHistory WatchHistory[]
+  comments     Comment[]
+  ratings      Rating[]
+
+  @@map("anime")
+}
+
+model View {
+  id        String   @id @default(cuid())
+  animeId   String
+  ip        String
+  createdAt DateTime @default(now())
+
+  anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
+
+  @@unique([animeId, ip])
+  @@map("views")
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  animeId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, animeId])
+  @@map("favorites")
+}
+
+model WatchHistory {
+  id               String   @id @default(cuid())
+  userId           String
+  animeId          String
+  episodeNum       Int
+  timestampSeconds Int      @default(0)
+  updatedAt        DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, animeId, episodeNum])
+  @@map("watch_history")
+}
+
+model Comment {
+  id        String        @id @default(cuid())
+  userId    String
+  animeId   String
+  text      String        @db.Text
+  status    CommentStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  userId    String
+  animeId   String
+  score     Int
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, animeId])
+  @@map("ratings")
+}
+
+model AdSlot {
+  id        String   @id @default(cuid())
+  slot      String   @unique
+  code      String   @db.Text
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ad_slots")
+}
+
+model Subscription {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  plan      String
+  status    String
+  startedAt DateTime  @default(now())
+  endsAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model NewsPost {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String?
+  content     String   @db.Text
+  image       String?
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("news_posts")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AnimeStatus {
+  ONGOING
+  FINISHED
+  ANNOUNCED
+}
+
+enum AnimeType {
+  TV
+  MOVIE
+  OVA
+  ONA
+  SPECIAL
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
