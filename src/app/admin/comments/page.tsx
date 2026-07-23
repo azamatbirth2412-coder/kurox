@@ -7,7 +7,6 @@ export default async function AdminCommentsPage() {
     where: { status: "PENDING" },
     include: {
       user: { select: { name: true, email: true } },
-      anime: { select: { title: true, id: true } },
     },
     orderBy: { createdAt: "asc" },
     take: 50,

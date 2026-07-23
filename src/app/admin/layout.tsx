@@ -1,39 +1,52 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Users, Film, MessageSquare, Radio, CreditCard } from "lucide-react";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { AdminNav } from "@/components/admin/AdminNav";
 
-const NAV = [
-  { href: "/admin", label: "Дашборд", icon: LayoutDashboard },
-  { href: "/admin/users", label: "Пользователи", icon: Users },
-  { href: "/admin/anime", label: "Аниме", icon: Film },
-  { href: "/admin/comments", label: "Комментарии", icon: MessageSquare },
-  { href: "/admin/ads", label: "Реклама", icon: Radio },
-  { href: "/admin/subscriptions", label: "Подписки", icon: CreditCard },
-];
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "rtxaza@gmail.com";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  if (!session || (session.user as any)?.role !== "ADMIN") redirect("/");
+  const email = session?.user?.email;
+  if (!email) redirect("/auth/login?callbackUrl=/admin");
+  if (email !== ADMIN_EMAIL) redirect("/");
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="w-60 bg-gray-900 border-r border-gray-800 flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
-        <div className="p-4 border-b border-gray-800">
-          <Link href="/" className="text-xl font-black text-purple-500">KUROX</Link>
-          <div className="text-xs text-gray-500 mt-1">Админ-панель</div>
+    <div className="flex" style={{ minHeight: "calc(100vh - 62px)" }}>
+      {/* Sidebar */}
+      <aside className="w-60 flex-shrink-0 border-r border-[var(--border)] sticky top-[62px] h-[calc(100vh-62px)] bg-[var(--surface)] flex flex-col">
+        {/* Admin badge */}
+        <div className="p-4 border-b border-[var(--border)]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
+              <ShieldCheck size={17} className="text-violet-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--text)]">Админ-панель</p>
+              <p className="text-[11px] text-[var(--text3)] truncate">{email}</p>
+            </div>
+          </div>
         </div>
-        <nav className="p-2 space-y-1">
-          {NAV.map((item) => (
-            <Link key={item.href} href={item.href}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
-              <item.icon size={16} />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+
+        {/* Nav */}
+        <div className="flex-1 overflow-y-auto">
+          <AdminNav />
+        </div>
+
+        {/* Back to site */}
+        <div className="p-2 border-t border-[var(--border)]">
+          <Link
+            href="/"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[var(--text3)] hover:bg-[var(--surface2)] hover:text-white transition-all"
+          >
+            <ArrowLeft size={15} /> На сайт
+          </Link>
+        </div>
       </aside>
-      <div className="flex-1 p-6 overflow-auto">{children}</div>
+
+      {/* Content */}
+      <div className="flex-1 p-6 overflow-auto min-w-0 bg-[var(--bg2)]">{children}</div>
     </div>
   );
 }

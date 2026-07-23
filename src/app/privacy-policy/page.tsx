@@ -19,9 +19,9 @@ export default function PrivacyPage() {
         <h2 className="text-lg font-semibold text-white mt-6">3. Cookies</h2>
         <p>Мы используем технические cookies для работы сайта (сессия, авторизация).</p>
         <h2 className="text-lg font-semibold text-white mt-6">4. Реклама</h2>
-        <p>На сайте может отображаться реклама третьих сторон. Premium-пользователи не видят рекламу.</p>
+        <p>На сайте отображается реклама третьих сторон для поддержки работы сервиса.</p>
         <h2 className="text-lg font-semibold text-white mt-6">5. Ваши права</h2>
-        <p>Вы можете запросить удаление аккаунта: <a href="mailto:admin@kurox.ru" className="text-purple-400 hover:underline">admin@kurox.ru</a></p>
+        <p>Вы можете запросить удаление аккаунта: <a href="mailto:rtxaza@gmail.com" className="text-purple-400 hover:underline">rtxaza@gmail.com</a></p>
       </div>
     </div>
   );

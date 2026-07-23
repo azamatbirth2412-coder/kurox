@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { BackButton } from "@/components/ui/BackButton";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -26,6 +27,9 @@ export default async function NewsPostPage({ params }: PageProps) {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="flex items-center gap-2 mb-3">
+        <BackButton />
+      </div>
       <Breadcrumbs items={[
         { label: "Главная", href: "/" },
         { label: "Новости", href: "/news" },

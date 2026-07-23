@@ -1,68 +1,121 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Star, Eye } from "lucide-react";
+import { Play, Star } from "lucide-react";
 
 interface AnimeCardProps {
-  id: string;
+  id: string | number;
   slug: string;
-  title: string;
+  title: string;           // Russian or English title
+  titleOrig?: string;      // Original (romaji/english) — shown secondary
   poster?: string | null;
   year?: number | null;
-  type?: string;
+  format?: string;
+  status?: string;
   rating?: number | null;
-  viewsCount?: number;
+  episodes?: number | null;
+  episodesAired?: number | null;
   genres?: string[];
+  isNew?: boolean;         // "NEW" badge
+  color?: string | null;
 }
 
 export function AnimeCard({
-  id,
-  slug,
-  title,
-  poster,
-  year,
-  type,
-  rating,
-  viewsCount,
+  id, slug, title, titleOrig, poster, year, format,
+  status, rating, episodes, episodesAired, genres, isNew,
 }: AnimeCardProps) {
+  const href = `/anime/${slug}`;
+  const formatLabel = format ?? null;
+  const isOngoing = status === "RELEASING";
+  const epText = episodes
+    ? isOngoing && episodesAired
+      ? `${episodesAired}/${episodes} эп.`
+      : `${episodes} эп.`
+    : null;
+
   return (
-    <Link
-      href={`/anime/${slug}-${id}`}
-      className="group relative block rounded-xl overflow-hidden bg-gray-800 hover:scale-105 transition-transform duration-200"
-    >
-      <div className="aspect-[2/3] relative">
+    <Link href={href} className="group flex flex-col card-hover h-full">
+      {/* Poster */}
+      <div className="relative aspect-[2/3] rounded-[var(--radius)] overflow-hidden bg-[var(--surface2)] flex-shrink-0">
         {poster ? (
           <Image
             src={poster}
-            alt={`${title} — смотреть аниме онлайн`}
+            alt={title}
             fill
-            className="object-cover"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+            sizes="(max-width:640px) 50vw,(max-width:1024px) 33vw,200px"
+            loading="lazy"
+            style={{ outline: "1px solid rgba(255,255,255,0.07)", outlineOffset: "-1px" }}
           />
         ) : (
-          <div className="w-full h-full bg-gray-700 flex items-center justify-center text-gray-500 text-sm">
-            Нет постера
+          <div className="w-full h-full flex items-center justify-center text-[var(--text3)]">
+            <Play size={28} className="opacity-25" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        {rating !== null && rating !== undefined && (
-          <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/70 rounded-md px-1.5 py-0.5 text-xs font-medium text-yellow-400">
-            <Star size={10} fill="currentColor" /> {rating.toFixed(1)}
+
+        {/* Dark gradient on hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+        {/* Play button */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-[transform,opacity] duration-300 ease-out scale-75 group-hover:scale-100">
+          <div className="w-14 h-14 rounded-full bg-violet-600/80 backdrop-blur-md border-2 border-violet-400/60 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.7)]">
+            <Play size={22} className="text-white fill-white ml-1" />
+          </div>
+        </div>
+
+        {/* TOP-LEFT: Rating */}
+        {rating !== null && rating !== undefined && rating > 0 && (
+          <div className="absolute top-2 left-2 flex items-center gap-0.5 bg-black/65 backdrop-blur-sm rounded-md px-1.5 py-0.5 text-[11px] font-bold text-[#fcd34d]">
+            <Star size={9} fill="currentColor" /> {rating.toFixed(1)}
           </div>
         )}
-        {type && (
-          <div className="absolute top-2 right-2 bg-purple-600/90 rounded-md px-1.5 py-0.5 text-xs font-medium">
-            {type}
+
+        {/* TOP-RIGHT badges */}
+        <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+          {isNew && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-tight bg-rose-500/90 text-white shadow-[0_0_8px_rgba(244,63,94,0.6)]">
+              НОВОЕ
+            </span>
+          )}
+          {isOngoing && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-tight bg-emerald-500/90 text-white shadow-[0_0_8px_rgba(16,185,129,0.5)]">
+              ОНГОИНГ
+            </span>
+          )}
+          {formatLabel && (
+            <span className="bg-black/70 backdrop-blur-sm text-white/70 text-[10px] font-semibold px-1.5 py-0.5 rounded-md leading-tight">
+              {formatLabel}
+            </span>
+          )}
+        </div>
+
+        {/* BOTTOM: episodes on hover */}
+        {epText && (
+          <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="bg-black/70 backdrop-blur-sm text-white text-[10px] font-medium px-1.5 py-0.5 rounded-md">
+              {epText}
+            </span>
           </div>
         )}
       </div>
-      <div className="p-2.5">
-        <h3 className="text-sm font-semibold line-clamp-2 leading-snug">{title}</h3>
-        <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
-          {year && <span>{year}</span>}
-          {viewsCount !== undefined && (
-            <span className="flex items-center gap-0.5">
-              <Eye size={10} /> {viewsCount.toLocaleString("ru")}
-            </span>
+
+      {/* Info — flex-1 fills remaining card height so mt-auto pins genres to bottom */}
+      <div className="pt-2.5 pb-1 px-0.5 flex flex-col flex-1 min-w-0">
+        <h3 className="text-sm font-bold line-clamp-2 leading-snug text-[var(--text)] group-hover:text-[var(--accent)] transition-colors duration-200" style={{ textWrap: "pretty" } as React.CSSProperties}>
+          {title}
+        </h3>
+        <div className="mt-auto pt-1.5 space-y-1">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {year && <span className="text-[11px] text-[var(--text3)] tabular-nums">{year}</span>}
+            {epText && <span className="text-[11px] text-[var(--text3)] tabular-nums">· {epText}</span>}
+          </div>
+          {genres && genres.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {genres.slice(0, 2).map(g => (
+                <span key={g} className="text-[10px] text-[var(--text3)] bg-[var(--surface3)] rounded px-1.5 py-0.5">
+                  {g}
+                </span>
+              ))}
+            </div>
           )}
         </div>
       </div>

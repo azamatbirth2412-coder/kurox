@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Очистка сессии</title>
+<style>
+  body { margin: 0; background: #0d0d0f; color: #fff; font-family: sans-serif;
+         display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column; gap: 16px; }
+  .spinner { width: 40px; height: 40px; border: 3px solid #333; border-top-color: #a855f7; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  p { color: #aaa; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="spinner"></div>
+<p id="msg">Удаляем сессию…</p>
+<script>
+  // Delete every cookie for this domain
+  var cookies = document.cookie.split(";");
+  for (var i = 0; i < cookies.length; i++) {
+    var name = cookies[i].trim().split("=")[0];
+    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=localhost";
+  }
+  document.getElementById("msg").textContent = "Готово! Переходим на страницу входа…";
+  setTimeout(function() { window.location.href = "/auth/login"; }, 1000);
+</script>
+</body>
+</html>

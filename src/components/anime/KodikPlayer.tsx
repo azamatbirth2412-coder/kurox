@@ -1,64 +1,97 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-import { AlertCircle, RefreshCw } from "lucide-react";
 
-interface KodikPlayerProps {
-  link: string;
+import { useEffect, useState } from "react";
+import { Loader2, AlertCircle, ExternalLink } from "lucide-react";
+
+interface Props {
   title: string;
-  episode?: number;
-  onTimeUpdate?: (seconds: number) => void;
+  titleEn?: string;
 }
 
-export function KodikPlayer({ link, title, episode, onTimeUpdate }: KodikPlayerProps) {
-  const [error, setError] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+type Status = "loading" | "loaded" | "not_found" | "no_token" | "error";
 
-  let playerUrl: string;
-  try {
-    const url = new URL(link.startsWith("//") ? `https:${link}` : link);
-    if (episode) url.searchParams.set("episode", String(episode));
-    playerUrl = url.toString();
-  } catch {
-    playerUrl = link;
-  }
+export function KodikPlayer({ title, titleEn }: Props) {
+  const [status, setStatus] = useState<Status>("loading");
+  const [iframeUrl, setIframeUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const handler = (e: MessageEvent) => {
-      if (e.data?.key === "kodik_player_current_position") {
-        onTimeUpdate?.(Math.floor(e.data.value));
-      }
-    };
-    window.addEventListener("message", handler);
-    return () => window.removeEventListener("message", handler);
-  }, [onTimeUpdate]);
+    const params = new URLSearchParams({ title });
+    if (titleEn) params.set("titleEn", titleEn);
 
-  if (error) {
+    fetch(`/api/kodik?${params}`)
+      .then(async res => {
+        if (res.status === 503) { setStatus("no_token"); return; }
+        if (res.status === 404) { setStatus("not_found"); return; }
+        if (!res.ok) { setStatus("error"); return; }
+        const data = await res.json();
+        if (data.iframeUrl) {
+          setIframeUrl(data.iframeUrl);
+          setStatus("loaded");
+        } else {
+          setStatus("not_found");
+        }
+      })
+      .catch(() => setStatus("error"));
+  }, [title, titleEn]);
+
+  if (status === "loading") {
     return (
-      <div className="aspect-video bg-gray-900 flex flex-col items-center justify-center gap-3 rounded-xl border border-gray-700">
-        <AlertCircle size={40} className="text-red-400" />
-        <p className="text-gray-400">Плеер временно недоступен</p>
-        <button
-          onClick={() => setError(false)}
-          className="flex items-center gap-2 text-sm text-purple-400 hover:underline"
-        >
-          <RefreshCw size={14} /> Попробовать снова
-        </button>
+      <div className="aspect-video bg-[var(--surface)] rounded-2xl flex items-center justify-center gap-3 text-[var(--text2)]">
+        <Loader2 size={20} className="animate-spin" />
+        <span className="text-sm">Ищем на Kodik…</span>
+      </div>
+    );
+  }
+
+  if (status === "no_token") {
+    return (
+      <div className="aspect-video bg-[var(--surface)] rounded-2xl flex flex-col items-center justify-center gap-3 text-center px-6">
+        <AlertCircle size={28} className="text-amber-400" />
+        <p className="text-sm font-semibold">Kodik не настроен</p>
+        <p className="text-xs text-[var(--text2)]">
+          Добавьте <code className="bg-[var(--surface2)] px-1 rounded">KODIK_TOKEN</code> в переменные окружения
+        </p>
+      </div>
+    );
+  }
+
+  if (status === "not_found") {
+    return (
+      <div className="aspect-video bg-[var(--surface)] rounded-2xl flex flex-col items-center justify-center gap-2 text-center px-6">
+        <AlertCircle size={28} className="text-[var(--text3)]" />
+        <p className="text-sm text-[var(--text2)]">Это аниме не найдено на Kodik</p>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="aspect-video bg-[var(--surface)] rounded-2xl flex flex-col items-center justify-center gap-2 text-center px-6">
+        <AlertCircle size={28} className="text-red-400" />
+        <p className="text-sm text-[var(--text2)]">Ошибка загрузки Kodik</p>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-gray-900">
+    <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
       <iframe
-        ref={iframeRef}
-        src={playerUrl}
-        title={`${title}${episode ? ` — эпизод ${episode}` : ""}`}
+        src={iframeUrl!}
         className="absolute inset-0 w-full h-full"
         allowFullScreen
         allow="autoplay; fullscreen"
-        onError={() => setError(true)}
-        referrerPolicy="origin"
+        title={title}
+        referrerPolicy="no-referrer-when-downgrade"
       />
+      <a
+        href={iframeUrl!}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="absolute top-2 right-2 z-10 bg-black/60 hover:bg-black/80 text-white p-1.5 rounded-lg transition-colors"
+        title="Открыть в Kodik"
+      >
+        <ExternalLink size={14} />
+      </a>
     </div>
   );
 }

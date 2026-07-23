@@ -2,7 +2,7 @@
 export const COMMENT_CONFIG = {
   // If true, new comments go to PENDING and require admin approval
   // If false, comments are APPROVED immediately
-  REQUIRE_MODERATION: true,
+  REQUIRE_MODERATION: false,
 
   // Rate limiting: seconds between comments per user
   RATE_LIMIT_SECONDS: 30,

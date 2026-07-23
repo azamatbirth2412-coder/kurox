@@ -1,0 +1,984 @@
+{
+  "communities": {
+    "0": [
+      "app_admin_titles_page",
+      "app_admin_titles_page_admintitlespage",
+      "components_admin_titlemanagement",
+      "components_admin_titlemanagement_admintitle",
+      "components_admin_titlemanagement_empty_form",
+      "components_admin_titlemanagement_rarity_badge_classes",
+      "components_admin_titlemanagement_rarity_labels",
+      "components_admin_titlemanagement_titlemanagement",
+      "components_anime_commentsection",
+      "components_anime_commentsection_comment",
+      "components_anime_commentsection_commentsection",
+      "components_anime_commentsection_commentuser",
+      "components_anime_commentsection_sort",
+      "components_anime_commentsection_sorts",
+      "components_anime_commentsection_timeago",
+      "components_profile_frameselector",
+      "components_profile_frameselector_frame_ids",
+      "components_profile_frameselector_frameselector",
+      "components_profile_frameselector_frameselectorprops",
+      "components_profile_frameselector_resizetobase64",
+      "components_profile_profileframe",
+      "components_profile_profileframe_arrowsdecoration",
+      "components_profile_profileframe_decorations",
+      "components_profile_profileframe_eclipsedecoration",
+      "components_profile_profileframe_fireringdecoration",
+      "components_profile_profileframe_frameid",
+      "components_profile_profileframe_frames",
+      "components_profile_profileframe_glow",
+      "components_profile_profileframe_nebuladecoration",
+      "components_profile_profileframe_profileframe",
+      "components_profile_profileframe_profileframeprops",
+      "components_profile_profileframe_sizes",
+      "components_profile_profileframe_smokedecoration",
+      "components_profile_profileframe_souldecoration",
+      "components_profile_profileframe_starlightdecoration",
+      "components_profile_profileframe_thornsdecoration",
+      "components_profile_profileframe_vortexdecoration",
+      "components_profile_titlebadge",
+      "components_profile_titlebadge_rarity_meta",
+      "components_profile_titlebadge_titlebadge",
+      "components_profile_titlebadge_titlebadgeprops",
+      "components_profile_titleselector",
+      "components_profile_titleselector_earnedtitle",
+      "components_profile_titleselector_formatdate",
+      "components_profile_titleselector_titleselector",
+      "components_profile_titleselector_titleselectorprops",
+      "lib_anime_avatars",
+      "lib_anime_avatars_anime_avatars"
+    ],
+    "1": [
+      "app_api_anime_view_route",
+      "app_api_anime_view_route_getip",
+      "app_api_anime_view_route_post",
+      "app_api_auth_forgot_password_route",
+      "app_api_auth_forgot_password_route_post",
+      "app_api_auth_register_route",
+      "app_api_auth_register_route_post",
+      "app_api_auth_register_route_schema",
+      "app_api_auth_reset_password_route",
+      "app_api_auth_reset_password_route_post",
+      "app_api_proxy_hls_route",
+      "app_api_proxy_hls_route_allowed_hosts",
+      "app_api_proxy_hls_route_fetchwithtimeout",
+      "app_api_proxy_hls_route_get",
+      "app_api_proxy_hls_route_getip",
+      "app_api_proxy_hls_route_isallowedhost",
+      "app_api_proxy_hls_route_m3u8cache",
+      "lib_email",
+      "lib_email_code_html",
+      "lib_email_sendpasswordresetcode",
+      "lib_email_sendpasswordresetcodeethereal",
+      "lib_rate_limit",
+      "lib_rate_limit_ratelimit",
+      "lib_rate_limit_ratelimitasync",
+      "lib_rate_limit_store",
+      "lib_rate_limit_window",
+      "proxy",
+      "proxy_config",
+      "proxy_failedattempts",
+      "proxy_getip",
+      "proxy_hassessioncookie",
+      "proxy_proxy",
+      "proxy_route_limits",
+      "proxy_session_cookie_names"
+    ],
+    "2": [
+      "app_layout",
+      "app_layout_metadata",
+      "app_layout_orgschema",
+      "app_layout_rootlayout",
+      "app_layout_viewport",
+      "app_layout_websiteschema",
+      "components_layout_footer",
+      "components_layout_footer_footer",
+      "components_layout_footer_info_links",
+      "components_layout_footer_nav_links",
+      "components_layout_footer_show_genres",
+      "components_layout_header",
+      "components_layout_header_catalog_links",
+      "components_layout_header_header",
+      "components_layout_header_searchresult",
+      "components_providers",
+      "components_providers_providers",
+      "components_tvmode",
+      "components_tvmode_center",
+      "components_tvmode_focusable",
+      "components_tvmode_getfocusables",
+      "components_tvmode_getvideo",
+      "components_tvmode_spatialnav",
+      "components_tvmode_tvmode",
+      "lib_anilibria_genres"
+    ],
+    "3": [
+      "lib_shikimori",
+      "lib_shikimori_apifetch",
+      "lib_shikimori_currentseason",
+      "lib_shikimori_extractmalid",
+      "lib_shikimori_getbygenreshikimori",
+      "lib_shikimori_getbykindshikimori",
+      "lib_shikimori_getfilmsshikimori",
+      "lib_shikimori_getlist",
+      "lib_shikimori_getpopularshikimori",
+      "lib_shikimori_getseasonalshikimori",
+      "lib_shikimori_getshikimoribyid",
+      "lib_shikimori_gettrendingshikimori",
+      "lib_shikimori_headers",
+      "lib_shikimori_isrussianquery",
+      "lib_shikimori_kind_ru",
+      "lib_shikimori_listparams",
+      "lib_shikimori_searchshikimori",
+      "lib_shikimori_shikimori_genres",
+      "lib_shikimori_shikimorianime",
+      "lib_shikimori_shikimoriposter",
+      "lib_shikimori_shikimorislug",
+      "lib_shikimori_shikimoristatus",
+      "lib_shikimori_shikimorititle",
+      "lib_shikimori_shikimoriyear",
+      "lib_shikimori_status_ru_s"
+    ],
+    "4": [
+      "app_admin_anime_page_animerow",
+      "app_anime_page_tocard",
+      "app_anime_slug_page_animepage",
+      "app_anime_slug_page_buildschema",
+      "app_api_search_route",
+      "app_api_search_route_get",
+      "app_genre_slug_page",
+      "app_genre_slug_page_generatemetadata",
+      "app_genre_slug_page_genrepage",
+      "app_genre_slug_page_pageprops",
+      "app_page_herobanner",
+      "app_schedule_page_schedulepage",
+      "app_search_page",
+      "app_search_page_generatemetadata",
+      "app_search_page_pageprops",
+      "app_search_page_searchpage",
+      "lib_anilibria_animeepisodes",
+      "lib_anilibria_animeposter",
+      "lib_anilibria_animeslug",
+      "lib_anilibria_animetitle",
+      "lib_anilibria_animeyear",
+      "lib_anilibria_getbygenre",
+      "lib_anilibria_searchanilibria"
+    ],
+    "5": [
+      "app_admin_page",
+      "app_admin_page_admindashboard",
+      "app_api_cron_route",
+      "app_api_cron_route_get",
+      "app_page_schedulerow",
+      "lib_anilibria",
+      "lib_anilibria_anilibriaepisode",
+      "lib_anilibria_animestatus",
+      "lib_anilibria_apifetch",
+      "lib_anilibria_cache",
+      "lib_anilibria_catalogresult",
+      "lib_anilibria_estimatenextepisodeat",
+      "lib_anilibria_fromcache",
+      "lib_anilibria_genre_ids",
+      "lib_anilibria_getschedule",
+      "lib_anilibria_getschedulewithdates",
+      "lib_anilibria_gettotalanimecount",
+      "lib_anilibria_gettrending",
+      "lib_anilibria_pagedresponse",
+      "lib_anilibria_scheduleapientry",
+      "lib_anilibria_scheduleentry",
+      "lib_anilibria_tocache"
+    ],
+    "6": [
+      "app_page",
+      "app_page_classicsrow",
+      "app_page_dailypick",
+      "app_page_gettrendingcached",
+      "app_page_homepage",
+      "app_page_metadata",
+      "app_page_newreleasesrow",
+      "app_page_ongoingrow",
+      "app_page_popularrow",
+      "app_page_sheader",
+      "app_page_skeletonrow",
+      "app_page_tocard",
+      "app_page_trendingrow",
+      "components_anime_herobannerslider",
+      "components_anime_herobannerslider_animeitem",
+      "components_anime_herobannerslider_herobannerslider",
+      "components_anime_herobannerslider_props",
+      "lib_anilibria_animeepisodesaired",
+      "lib_anilibria_genre_icons",
+      "lib_anilibria_getclassics",
+      "lib_anilibria_getnewreleases",
+      "lib_anilibria_gettoprated100"
+    ],
+    "7": [
+      "app_anime_slug_page",
+      "app_anime_slug_page_generatemetadata",
+      "app_anime_slug_page_pageprops",
+      "app_anime_slug_page_resolveanime",
+      "components_anime_animecard",
+      "components_anime_animecard_animecard",
+      "components_anime_animecard_animecardprops",
+      "components_anime_similarrow",
+      "components_anime_similarrow_similaranime",
+      "components_anime_similarrow_similarrow",
+      "components_anime_viewtracker",
+      "components_anime_viewtracker_viewtracker",
+      "components_ui_adbanner",
+      "components_ui_adbanner_adbanner",
+      "components_ui_adbanner_adbannerprops",
+      "components_ui_adbanner_adslot",
+      "components_ui_adbanner_banneritem",
+      "components_ui_backbutton",
+      "components_ui_backbutton_backbutton",
+      "lib_anilibria_getbycode",
+      "lib_anilibria_getbyid"
+    ],
+    "8": [
+      "components_anime_episodeplayer",
+      "components_anime_episodeplayer_episode",
+      "components_anime_episodeplayer_episodeplayer",
+      "components_anime_episodeplayer_fmt",
+      "components_anime_episodeplayer_fmtxp",
+      "components_anime_episodeplayer_masterurl",
+      "components_anime_episodeplayer_props",
+      "components_anime_episodeplayer_proxyurl",
+      "components_anime_episodeplayer_quality",
+      "components_anime_episodeplayer_qualityopt",
+      "components_anime_episodeplayer_useuserxp",
+      "components_anime_kodikplayer",
+      "components_anime_kodikplayer_kodikplayer",
+      "components_anime_kodikplayer_props",
+      "components_anime_kodikplayer_status",
+      "components_anime_playersources",
+      "components_anime_playersources_episode",
+      "components_anime_playersources_playersources",
+      "components_anime_playersources_props",
+      "components_anime_playersources_source",
+      "components_anime_playersources_sources"
+    ],
+    "9": [
+      "app_api_admin_ads_route",
+      "app_api_admin_ads_route_get",
+      "app_api_admin_ads_route_post",
+      "app_api_comments_id_route",
+      "app_api_comments_id_route_delete",
+      "app_api_favorites_route",
+      "app_api_favorites_route_get",
+      "app_api_favorites_route_post",
+      "app_api_profile_title_route",
+      "app_api_profile_title_route_patch",
+      "app_api_titles_claim_route",
+      "app_api_titles_claim_route_post",
+      "app_api_watch_history_route",
+      "app_api_watch_history_route_delete",
+      "app_api_watch_history_route_get",
+      "app_api_watch_history_route_post",
+      "app_rss_xml_route",
+      "app_rss_xml_route_get",
+      "lib_prisma",
+      "lib_prisma_globalforprisma"
+    ],
+    "10": [
+      "app_admin_anime_page",
+      "app_admin_anime_page_adminanimepage",
+      "app_admin_anime_page_buildurl",
+      "app_admin_anime_page_metadata",
+      "app_admin_anime_page_pageprops",
+      "app_admin_anime_page_pagination",
+      "app_anime_page",
+      "app_anime_page_animecatalogpage",
+      "app_anime_page_buildurl",
+      "app_anime_page_metadata",
+      "app_anime_page_pageprops",
+      "app_anime_page_pagination",
+      "app_anime_page_sort_options",
+      "lib_anilibria_genreid",
+      "lib_anilibria_getbygenrepage",
+      "lib_anilibria_getongoingpage",
+      "lib_anilibria_getpopularpage",
+      "lib_anilibria_gettrendingpage",
+      "lib_anilibria_searchanilibriapage"
+    ],
+    "11": [
+      "app_api_me_stats_route",
+      "app_api_me_stats_route_get",
+      "app_api_profile_frame_route",
+      "app_api_profile_frame_route_patch",
+      "app_api_user_stats_route",
+      "app_api_user_stats_route_get",
+      "app_profile_page",
+      "app_profile_page_metadata",
+      "app_profile_page_profilepage",
+      "components_profile_watchhistorysection",
+      "components_profile_watchhistorysection_historyitem",
+      "components_profile_watchhistorysection_watchhistorysection",
+      "lib_level",
+      "lib_level_calclevel",
+      "lib_level_frame_unlocks",
+      "lib_level_getlevelinfo",
+      "lib_level_level_titles",
+      "lib_level_levelprogress",
+      "lib_level_xpforlevel"
+    ],
+    "12": [
+      "lib_anilist",
+      "lib_anilist_anilistanime",
+      "lib_anilist_catalog_genres",
+      "lib_anilist_extractanilistid",
+      "lib_anilist_format_ru",
+      "lib_anilist_genre_ru",
+      "lib_anilist_getanimebyid",
+      "lib_anilist_getbyformat",
+      "lib_anilist_getbygenre",
+      "lib_anilist_getbymalid",
+      "lib_anilist_getpopularanime",
+      "lib_anilist_getseasonalanime",
+      "lib_anilist_gettrendinganime",
+      "lib_anilist_gql",
+      "lib_anilist_makeslug",
+      "lib_anilist_pageresult",
+      "lib_anilist_searchanilist",
+      "lib_anilist_season_ru",
+      "lib_anilist_status_ru"
+    ],
+    "13": [
+      "app_api_admin_comments_id_route",
+      "app_api_admin_comments_id_route_patch",
+      "app_api_admin_upload_route",
+      "app_api_admin_upload_route_allowed_types",
+      "app_api_admin_upload_route_post",
+      "app_api_auth_nextauth_route",
+      "app_api_comments_id_like_route",
+      "app_api_comments_id_like_route_post",
+      "app_api_ratings_route",
+      "app_api_ratings_route_get",
+      "app_api_ratings_route_post",
+      "lib_auth",
+      "lib_auth_handlers_auth_signin_signout",
+      "lib_auth_isuserbanned",
+      "lib_auth_jwtsafeimage",
+      "lib_auth_loginschema"
+    ],
+    "14": [
+      "app_admin_ads_page",
+      "app_admin_ads_page_adminadspage",
+      "components_admin_admanagement",
+      "components_admin_admanagement_ad_templates",
+      "components_admin_admanagement_admanagement",
+      "components_admin_admanagement_adslotdata",
+      "components_admin_admanagement_adtype",
+      "components_admin_admanagement_banneritem",
+      "components_admin_admanagement_buildcode",
+      "components_admin_admanagement_dimcheck",
+      "components_admin_admanagement_dimcheckprops",
+      "components_admin_admanagement_parseslotstate",
+      "components_admin_admanagement_slots",
+      "components_admin_admanagement_slotstate",
+      "components_admin_admanagement_useimagedimensions"
+    ],
+    "15": [
+      "app_genres_page",
+      "app_genres_page_genres",
+      "app_genres_page_genrespage",
+      "app_genres_page_metadata",
+      "app_news_page",
+      "app_news_page_metadata",
+      "app_news_page_newspage",
+      "app_news_slug_page",
+      "app_news_slug_page_generatemetadata",
+      "app_news_slug_page_newspostpage",
+      "app_news_slug_page_pageprops",
+      "components_ui_breadcrumbs",
+      "components_ui_breadcrumbs_breadcrumbitem",
+      "components_ui_breadcrumbs_breadcrumbs"
+    ],
+    "16": [
+      "components_profile_titlesshowcase",
+      "components_profile_titlesshowcase_animereq",
+      "components_profile_titlesshowcase_commonbg",
+      "components_profile_titlesshowcase_epicbg",
+      "components_profile_titlesshowcase_hextorgb",
+      "components_profile_titlesshowcase_legendarybg",
+      "components_profile_titlesshowcase_lockedbg",
+      "components_profile_titlesshowcase_rarebg",
+      "components_profile_titlesshowcase_rarity_meta",
+      "components_profile_titlesshowcase_requirementsblock",
+      "components_profile_titlesshowcase_showcasetitle",
+      "components_profile_titlesshowcase_titlecard",
+      "components_profile_titlesshowcase_titlesshowcase",
+      "components_profile_titlesshowcase_titlesshowcaseprops"
+    ],
+    "17": [
+      "lib_recommendations",
+      "lib_recommendations_animerow",
+      "lib_recommendations_cache",
+      "lib_recommendations_genrescore",
+      "lib_recommendations_getpersonalrecommendations",
+      "lib_recommendations_getsimilaranime",
+      "lib_recommendations_invalidatepersonalcache",
+      "lib_recommendations_parsearr",
+      "lib_recommendations_ratingscore",
+      "lib_recommendations_similarity",
+      "lib_recommendations_studioscore",
+      "lib_recommendations_yearscore"
+    ],
+    "18": [
+      "app_api_comments_route",
+      "app_api_comments_route_checkratelimit",
+      "app_api_comments_route_containsbannedwords",
+      "app_api_comments_route_createschema",
+      "app_api_comments_route_get",
+      "app_api_comments_route_post",
+      "app_api_comments_route_ratelimitstore",
+      "app_api_comments_route_sanitizetext",
+      "lib_comment_config",
+      "lib_comment_config_comment_config"
+    ],
+    "19": [
+      "app_anime_slug_page_generatestaticparams",
+      "app_api_random_route",
+      "app_api_random_route_get",
+      "app_sitemap",
+      "app_sitemap_genre_names",
+      "app_sitemap_rationale_22",
+      "app_sitemap_sitemap",
+      "lib_anilibria_anilibriaanime",
+      "lib_anilibria_getpopular"
+    ],
+    "20": [
+      "components_anime_externalsources",
+      "components_anime_externalsources_epsource",
+      "components_anime_externalsources_extepisode",
+      "components_anime_externalsources_externalsources",
+      "components_anime_externalsources_props",
+      "components_anime_externalsources_searchresult",
+      "components_anime_externalsources_source_colors",
+      "components_anime_externalsources_source_labels",
+      "components_anime_externalsources_videolink"
+    ],
+    "21": [
+      "lib_kodik",
+      "lib_kodik_buildplayerurl",
+      "lib_kodik_getanimebyid",
+      "lib_kodik_getanimelist",
+      "lib_kodik_gettranslations",
+      "lib_kodik_kodikanime",
+      "lib_kodik_kodikrequest",
+      "lib_kodik_kodikresponse",
+      "lib_kodik_searchanime"
+    ],
+    "22": [
+      "app_anime_loading",
+      "app_anime_loading_loading",
+      "app_genre_slug_loading",
+      "app_genre_slug_loading_loading",
+      "app_search_loading",
+      "app_search_loading_loading",
+      "components_anime_animecardskeleton",
+      "components_anime_animecardskeleton_animecardskeleton"
+    ],
+    "23": [
+      "app_leaderboard_page",
+      "app_leaderboard_page_fmt",
+      "app_leaderboard_page_getleaderboard",
+      "app_leaderboard_page_leaderboardpage",
+      "app_leaderboard_page_metadata",
+      "app_leaderboard_page_prizes_data",
+      "app_leaderboard_page_rankstyle",
+      "app_leaderboard_page_user"
+    ],
+    "24": [
+      "components_anime_upcominganime",
+      "components_anime_upcominganime_calctime",
+      "components_anime_upcominganime_countdownbadge",
+      "components_anime_upcominganime_posterwithfallback",
+      "components_anime_upcominganime_upcoming",
+      "components_anime_upcominganime_upcominganime",
+      "components_anime_upcominganime_upcomingitem",
+      "components_anime_upcominganime_usecountdown"
+    ],
+    "25": [
+      "app_schedule_page",
+      "app_schedule_page_days",
+      "app_schedule_page_formatdate",
+      "app_schedule_page_metadata",
+      "app_schedule_page_upcoming_2026",
+      "components_anime_upcomingcountdown",
+      "components_anime_upcomingcountdown_upcomingcountdown"
+    ],
+    "26": [
+      "components_ads_adslot",
+      "components_ads_adslot_aderrorboundary",
+      "components_ads_adslot_aderrorboundary_getderivedstatefromerror",
+      "components_ads_adslot_aderrorboundary_render",
+      "components_ads_adslot_adslot",
+      "components_ads_adslot_adslotinner",
+      "components_ads_adslot_adslotprops"
+    ],
+    "27": [
+      "app_admin_users_page",
+      "app_admin_users_page_adminuserspage",
+      "components_admin_usermanagement",
+      "components_admin_usermanagement_datefmt",
+      "components_admin_usermanagement_user",
+      "components_admin_usermanagement_usermanagement"
+    ],
+    "28": [
+      "components_ui_statswidget",
+      "components_ui_statswidget_countup",
+      "components_ui_statswidget_icons",
+      "components_ui_statswidget_stat",
+      "components_ui_statswidget_staticon",
+      "components_ui_statswidget_statswidget"
+    ],
+    "29": [
+      "app_admin_comments_page",
+      "app_admin_comments_page_admincommentspage",
+      "components_admin_commentmoderationlist",
+      "components_admin_commentmoderationlist_comment",
+      "components_admin_commentmoderationlist_commentmoderationlist"
+    ],
+    "30": [
+      "app_admin_layout",
+      "app_admin_layout_adminlayout",
+      "components_admin_adminnav",
+      "components_admin_adminnav_adminnav",
+      "components_admin_adminnav_nav"
+    ],
+    "31": [
+      "app_admin_sync_page",
+      "app_admin_sync_page_doneevent",
+      "app_admin_sync_page_progressevent",
+      "app_admin_sync_page_syncmode",
+      "app_admin_sync_page_syncpage"
+    ],
+    "32": [
+      "app_api_admin_sync_route",
+      "app_api_admin_sync_route_get",
+      "app_api_admin_sync_route_posterurl",
+      "app_api_admin_sync_route_sse",
+      "app_api_admin_sync_route_title"
+    ],
+    "33": [
+      "app_api_anime_smotret_route",
+      "app_api_anime_smotret_route_anime365series",
+      "app_api_anime_smotret_route_anime365translation",
+      "app_api_anime_smotret_route_get",
+      "app_api_anime_smotret_route_preferred"
+    ],
+    "34": [
+      "app_api_clear_auth_route",
+      "app_api_clear_auth_route_auth_cookie_prefixes",
+      "app_api_clear_auth_route_clearauthcookies",
+      "app_api_clear_auth_route_get",
+      "app_api_clear_auth_route_post"
+    ],
+    "35": [
+      "app_api_mood_route",
+      "app_api_mood_route_get",
+      "app_api_mood_route_moodcache",
+      "app_api_mood_route_moods",
+      "app_api_mood_route_parsearr"
+    ],
+    "36": [
+      "app_api_proxy_master_route",
+      "app_api_proxy_master_route_allowed_hosts",
+      "app_api_proxy_master_route_get",
+      "app_api_proxy_master_route_isallowed",
+      "app_api_proxy_master_route_toproxied"
+    ],
+    "37": [
+      "components_admin_upcominganimeadmin",
+      "components_admin_upcominganimeadmin_countdown",
+      "components_admin_upcominganimeadmin_upcominganimeadmin",
+      "components_admin_upcominganimeadmin_upcomingitem",
+      "components_admin_upcominganimeadmin_usecountdown"
+    ],
+    "38": [
+      "components_anime_moodpicker",
+      "components_anime_moodpicker_animeresult",
+      "components_anime_moodpicker_moodid",
+      "components_anime_moodpicker_moodpicker",
+      "components_anime_moodpicker_moods"
+    ],
+    "39": [
+      "components_ui_animerating",
+      "components_ui_animerating_animerating",
+      "components_ui_starrating",
+      "components_ui_starrating_starrating",
+      "components_ui_starrating_starratingprops"
+    ],
+    "40": [
+      "lib_motion_config",
+      "lib_motion_config_motionconfig",
+      "lib_motion_tokens",
+      "lib_motion_tokens_motiontokens",
+      "lib_motion_tokens_springs"
+    ],
+    "41": [
+      "app_api_admin_titles_id_route",
+      "app_api_admin_titles_id_route_delete",
+      "app_api_admin_titles_id_route_post",
+      "app_api_admin_titles_id_route_requireadmin"
+    ],
+    "42": [
+      "app_api_admin_titles_route",
+      "app_api_admin_titles_route_get",
+      "app_api_admin_titles_route_post",
+      "app_api_admin_titles_route_requireadmin"
+    ],
+    "43": [
+      "app_api_admin_titles_seed_route",
+      "app_api_admin_titles_seed_route_post",
+      "app_api_admin_titles_seed_route_requireadmin",
+      "app_api_admin_titles_seed_route_seed_titles"
+    ],
+    "44": [
+      "app_api_admin_users_id_route",
+      "app_api_admin_users_id_route_delete",
+      "app_api_admin_users_id_route_patch",
+      "app_api_admin_users_id_route_requireadmin"
+    ],
+    "45": [
+      "app_api_kodik_route",
+      "app_api_kodik_route_get",
+      "app_api_kodik_route_gettoken",
+      "app_api_kodik_route_searchkodik"
+    ],
+    "46": [
+      "app_api_user_avatar_route",
+      "app_api_user_avatar_route_delete",
+      "app_api_user_avatar_route_get",
+      "app_api_user_avatar_route_post"
+    ],
+    "47": [
+      "components_anime_episodetimer",
+      "components_anime_episodetimer_calcdiff",
+      "components_anime_episodetimer_episodetimer",
+      "components_anime_episodetimer_props"
+    ],
+    "48": [
+      "app_about_page",
+      "app_about_page_aboutpage",
+      "app_about_page_metadata"
+    ],
+    "49": [
+      "app_auth_forgot_password_page",
+      "app_auth_forgot_password_page_forgotpasswordpage",
+      "app_auth_forgot_password_page_step"
+    ],
+    "50": [
+      "app_auth_login_page",
+      "app_auth_login_page_loginform",
+      "app_auth_login_page_loginpage"
+    ],
+    "51": [
+      "app_auth_reset_password_page",
+      "app_auth_reset_password_page_resetpasswordform",
+      "app_auth_reset_password_page_resetpasswordpage"
+    ],
+    "52": [
+      "app_dmca_page",
+      "app_dmca_page_dmcapage",
+      "app_dmca_page_metadata"
+    ],
+    "53": [
+      "app_opengraph_image",
+      "app_opengraph_image_ogimage",
+      "app_opengraph_image_size"
+    ],
+    "54": [
+      "app_privacy_policy_page",
+      "app_privacy_policy_page_metadata",
+      "app_privacy_policy_page_privacypage"
+    ],
+    "55": [
+      "app_uploads_path_route",
+      "app_uploads_path_route_get",
+      "app_uploads_path_route_mime"
+    ],
+    "56": [
+      "components_anime_anilibriaplayer",
+      "components_anime_anilibriaplayer_anilibriaplayer",
+      "components_anime_anilibriaplayer_props"
+    ],
+    "57": [
+      "components_profile_avatarupload",
+      "components_profile_avatarupload_avatarupload",
+      "components_profile_avatarupload_props"
+    ],
+    "58": [
+      "app_api_anime_avatars_route",
+      "app_api_anime_avatars_route_get"
+    ],
+    "59": [
+      "app_api_anime_sources_route",
+      "app_api_anime_sources_route_get"
+    ],
+    "60": [
+      "app_api_auth_clear_session_route",
+      "app_api_auth_clear_session_route_get"
+    ],
+    "61": [
+      "app_auth_error_page",
+      "app_auth_error_page_autherrorpage"
+    ],
+    "62": [
+      "app_auth_register_page",
+      "app_auth_register_page_registerpage"
+    ],
+    "63": [
+      "app_error",
+      "app_error_error"
+    ],
+    "64": [
+      "app_global_error",
+      "app_global_error_globalerror"
+    ],
+    "65": [
+      "app_not_found",
+      "app_not_found_notfound"
+    ],
+    "66": [
+      "app_robots_txt_route",
+      "app_robots_txt_route_get"
+    ],
+    "67": [
+      "components_searchform",
+      "components_searchform_searchform"
+    ],
+    "68": [
+      "components_themetoggle",
+      "components_themetoggle_themetoggle"
+    ],
+    "69": [
+      "components_ui_splashscreen",
+      "components_ui_splashscreen_splashscreen"
+    ],
+    "70": [
+      "app_api_auth_nextauth_route_get_post"
+    ]
+  },
+  "cohesion": {
+    "0": 0.051418439716312055,
+    "1": 0.10695187165775401,
+    "2": 0.11,
+    "3": 0.11,
+    "4": 0.2608695652173913,
+    "5": 0.1471861471861472,
+    "6": 0.15151515151515152,
+    "7": 0.13333333333333333,
+    "8": 0.12857142857142856,
+    "9": 0.1,
+    "10": 0.17543859649122806,
+    "11": 0.2222222222222222,
+    "12": 0.10526315789473684,
+    "13": 0.15833333333333333,
+    "14": 0.17142857142857143,
+    "15": 0.17582417582417584,
+    "16": 0.15384615384615385,
+    "17": 0.2727272727272727,
+    "18": 0.28888888888888886,
+    "19": 0.2777777777777778,
+    "20": 0.2222222222222222,
+    "21": 0.3333333333333333,
+    "22": 0.35714285714285715,
+    "23": 0.35714285714285715,
+    "24": 0.32142857142857145,
+    "25": 0.3333333333333333,
+    "26": 0.2857142857142857,
+    "27": 0.4,
+    "28": 0.3333333333333333,
+    "29": 0.5,
+    "30": 0.5,
+    "31": 0.4,
+    "32": 0.4,
+    "33": 0.5,
+    "34": 0.7,
+    "35": 0.5,
+    "36": 0.6,
+    "37": 0.5,
+    "38": 0.4,
+    "39": 0.5,
+    "40": 0.5,
+    "41": 0.8333333333333334,
+    "42": 0.8333333333333334,
+    "43": 0.6666666666666666,
+    "44": 0.8333333333333334,
+    "45": 0.8333333333333334,
+    "46": 0.5,
+    "47": 0.6666666666666666,
+    "48": 0.6666666666666666,
+    "49": 0.6666666666666666,
+    "50": 0.6666666666666666,
+    "51": 0.6666666666666666,
+    "52": 0.6666666666666666,
+    "53": 0.6666666666666666,
+    "54": 0.6666666666666666,
+    "55": 0.6666666666666666,
+    "56": 0.6666666666666666,
+    "57": 0.6666666666666666,
+    "58": 1.0,
+    "59": 1.0,
+    "60": 1.0,
+    "61": 1.0,
+    "62": 1.0,
+    "63": 1.0,
+    "64": 1.0,
+    "65": 1.0,
+    "66": 1.0,
+    "67": 1.0,
+    "68": 1.0,
+    "69": 1.0,
+    "70": 1.0
+  },
+  "gods": [
+    {
+      "id": "lib_anilibria_animeslug",
+      "label": "animeSlug()",
+      "degree": 27
+    },
+    {
+      "id": "lib_anilibria_animeposter",
+      "label": "animePoster()",
+      "degree": 22
+    },
+    {
+      "id": "lib_anilibria_animetitle",
+      "label": "animeTitle()",
+      "degree": 22
+    },
+    {
+      "id": "lib_anilibria_animeyear",
+      "label": "animeYear()",
+      "degree": 18
+    },
+    {
+      "id": "app_page_tocard",
+      "label": "toCard()",
+      "degree": 13
+    },
+    {
+      "id": "lib_level_calclevel",
+      "label": "calcLevel()",
+      "degree": 12
+    },
+    {
+      "id": "app_anime_slug_page_animepage",
+      "label": "AnimePage()",
+      "degree": 11
+    },
+    {
+      "id": "lib_anilibria_animeepisodes",
+      "label": "animeEpisodes()",
+      "degree": 11
+    },
+    {
+      "id": "lib_anilibria_getpopular",
+      "label": "getPopular()",
+      "degree": 11
+    },
+    {
+      "id": "app_anime_page_animecatalogpage",
+      "label": "AnimeCatalogPage()",
+      "degree": 9
+    }
+  ],
+  "surprises": [
+    {
+      "source": "AdminAnimePage()",
+      "target": "getTotalAnimeCount()",
+      "source_files": [
+        "app/admin/anime/page.tsx",
+        "lib/anilibria.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; bridges separate communities"
+    },
+    {
+      "source": "AdminDashboard()",
+      "target": "animePoster()",
+      "source_files": [
+        "app/admin/page.tsx",
+        "lib/anilibria.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; bridges separate communities"
+    },
+    {
+      "source": "AdminDashboard()",
+      "target": "animeSlug()",
+      "source_files": [
+        "app/admin/page.tsx",
+        "lib/anilibria.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; bridges separate communities"
+    },
+    {
+      "source": "AdminDashboard()",
+      "target": "animeTitle()",
+      "source_files": [
+        "app/admin/page.tsx",
+        "lib/anilibria.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; bridges separate communities"
+    },
+    {
+      "source": "generateStaticParams()",
+      "target": "animeSlug()",
+      "source_files": [
+        "app/anime/[slug]/page.tsx",
+        "lib/anilibria.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; bridges separate communities"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `animeSlug()` connect `Community 4` to `Community 5`, `Community 6`, `Community 7`, `Community 10`, `Community 19`, `Community 25`?",
+      "why": "High betweenness centrality (0.040) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `animePoster()` connect `Community 4` to `Community 5`, `Community 6`, `Community 7`, `Community 10`, `Community 25`?",
+      "why": "High betweenness centrality (0.031) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `animeTitle()` connect `Community 4` to `Community 5`, `Community 6`, `Community 7`, `Community 10`, `Community 25`?",
+      "why": "High betweenness centrality (0.031) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `metadata`, `metadata`, `PageProps` to the rest of the system?",
+      "why": "159 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.051418439716312055 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.10695187165775401 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 2` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.11 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

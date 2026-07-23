@@ -1,6 +1,5 @@
 "use client";
 import { Component, type ReactNode } from "react";
-import { useSession } from "next-auth/react";
 
 interface AdSlotProps {
   slot: string;
@@ -20,10 +19,6 @@ class AdErrorBoundary extends Component<{ children: ReactNode }, { error: boolea
 }
 
 function AdSlotInner({ slot, code, minHeight = 90 }: AdSlotProps) {
-  const { data: session } = useSession();
-
-  // Premium users don't see ads
-  if ((session?.user as any)?.isPremium) return null;
   if (!code) return null;
 
   return (

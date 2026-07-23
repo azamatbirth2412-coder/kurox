@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")   // pooled (PgBouncer) — used by the app
+  directUrl = env("DIRECT_URL")     // direct TCP — used by prisma migrate only
 }
 
 model User {
@@ -14,20 +15,28 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
-  role          Role      @default(USER)
+  role          String    @default("USER")
   isPremium     Boolean   @default(false)
   premiumUntil  DateTime?
   telegramId    String?
+  bannedAt      DateTime?
+  banReason     String?
+  profileFrame  String    @default("default")
+  xp            Int       @default(0)
+  activeTitleId String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts     Account[]
-  sessions     Session[]
-  favorites    Favorite[]
-  watchHistory WatchHistory[]
-  comments     Comment[]
-  ratings      Rating[]
-  subscription Subscription?
+  accounts      Account[]
+  sessions      Session[]
+  favorites     Favorite[]
+  watchHistory  WatchHistory[]
+  comments      Comment[]
+  ratings       Rating[]
+  subscription  Subscription?
+  commentLikes  CommentLike[]
+  activeTitle   Title?        @relation("UserActiveTitle", fields: [activeTitleId], references: [id])
+  titles        UserTitle[]
 
   @@map("users")
 }
@@ -38,12 +47,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -68,53 +77,53 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  @@index([expires])
   @@map("verification_tokens")
 }
 
 model Anime {
-  id              String      @id @default(cuid())
-  kodikId         String      @unique
-  shikimoriId     Int?        @unique
-  slug            String      @unique
+  id              String   @id @default(cuid())
+  kodikId         String   @unique
+  shikimoriId     Int?     @unique
+  slug            String   @unique
   title           String
   titleEn         String?
   titleJa         String?
-  description     String?     @db.Text
+  description     String?
   poster          String?
   banner          String?
   year            Int?
-  status          AnimeStatus @default(ONGOING)
-  type            AnimeType   @default(TV)
-  genres          String[]
-  studios         String[]
+  status          String   @default("ONGOING")
+  type            String   @default("TV")
+  genres          String   @default("[]")
+  studios         String   @default("[]")
   rating          Float?
   shikimoriRating Float?
   episodesTotal   Int?
   episodesAired   Int?
   season          String?
-  isHidden        Boolean     @default(false)
-  viewsCount      Int         @default(0)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  isHidden        Boolean  @default(false)
+  viewsCount      Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  views        View[]
   favorites    Favorite[]
-  watchHistory WatchHistory[]
-  comments     Comment[]
-  ratings      Rating[]
 
+  @@index([viewsCount])
+  @@index([status])
+  @@index([type, status])
   @@map("anime")
 }
 
 model View {
   id        String   @id @default(cuid())
+  // Anilibria release id (as string) — NOT a FK to the local `anime` table
   animeId   String
   ip        String
   createdAt DateTime @default(now())
 
-  anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
-
   @@unique([animeId, ip])
+  @@index([createdAt])
   @@map("views")
 }
 
@@ -128,57 +137,81 @@ model Favorite {
   anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
 
   @@unique([userId, animeId])
+  @@index([userId])
   @@map("favorites")
 }
 
 model WatchHistory {
   id               String   @id @default(cuid())
   userId           String
-  animeId          String
+  animeId          String   // External API ID (Anilibria integer, stored as string)
   episodeNum       Int
   timestampSeconds Int      @default(0)
+  title            String   @default("")
+  poster           String?
+  slug             String?
   updatedAt        DateTime @updatedAt
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, animeId, episodeNum])
+  @@index([userId])
   @@map("watch_history")
 }
 
 model Comment {
-  id        String        @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
   animeId   String
-  text      String        @db.Text
-  status    CommentStatus @default(PENDING)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  text      String
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes CommentLike[]
 
+  @@index([animeId, status])
+  @@index([userId])
+  @@index([createdAt])
   @@map("comments")
+}
+
+model CommentLike {
+  id        String   @id @default(cuid())
+  commentId String
+  userId    String
+  type      String   // "LIKE" | "DISLIKE"
+  createdAt DateTime @default(now())
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+  @@index([commentId])
+  @@map("comment_likes")
 }
 
 model Rating {
   id        String   @id @default(cuid())
   userId    String
+  // Anilibria release id (as string) — NOT a FK to the local `anime` table,
+  // because the catalog lives in the external Anilibria API (same as Comment.animeId)
   animeId   String
   score     Int
   createdAt DateTime @default(now())
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, animeId])
+  @@index([animeId])
   @@map("ratings")
 }
 
 model AdSlot {
   id        String   @id @default(cuid())
   slot      String   @unique
-  code      String   @db.Text
+  code      String
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -199,41 +232,62 @@ model Subscription {
   @@map("subscriptions")
 }
 
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([expires])
+  @@map("password_reset_tokens")
+}
+
+model Title {
+  id            String      @id @default(cuid())
+  key           String      @unique
+  name          String
+  emoji         String      @default("🏅")
+  color         String      @default("#8b5cf6")
+  rarity        String      @default("common")
+  description   String?
+  animeSlug     String?
+  minEpisodes   Int         @default(1)
+  totalEpisodes Int         @default(0)
+  requiresAnime String?
+  animated      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+
+  userTitles     UserTitle[]
+  activeForUsers User[]    @relation("UserActiveTitle")
+
+  @@map("titles")
+}
+
+model UserTitle {
+  id       String   @id @default(cuid())
+  userId   String
+  titleId  String
+  earnedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title Title @relation(fields: [titleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, titleId])
+  @@map("user_titles")
+}
+
 model NewsPost {
   id          String   @id @default(cuid())
   slug        String   @unique
   title       String
   description String?
-  content     String   @db.Text
+  content     String
   image       String?
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@map("news_posts")
-}
-
-enum Role {
-  USER
-  ADMIN
-}
-
-enum AnimeStatus {
-  ONGOING
-  FINISHED
-  ANNOUNCED
-}
-
-enum AnimeType {
-  TV
-  MOVIE
-  OVA
-  ONA
-  SPECIAL
-}
-
-enum CommentStatus {
-  PENDING
-  APPROVED
-  REJECTED
 }

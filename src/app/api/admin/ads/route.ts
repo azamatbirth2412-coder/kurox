@@ -4,7 +4,10 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const slots = await prisma.adSlot.findMany({ where: { isActive: true } });
-  return NextResponse.json(slots);
+  // Called by AdBanner on every page view — cache to avoid a DB hit per pageview
+  return NextResponse.json(slots, {
+    headers: { "Cache-Control": "public, max-age=5, stale-while-revalidate=10" },
+  });
 }
 
 export async function POST(req: NextRequest) {
