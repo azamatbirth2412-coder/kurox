@@ -52,7 +52,8 @@ export async function POST(req: NextRequest) {
         console.error("Ethereal failed:", (e as Error).message);
       }
     } else {
-      console.error("SMTP not configured — password reset email not sent for", email);
+      // SMTP not configured — return code directly so user can reset without email
+      return NextResponse.json({ ok: true, code });
     }
 
     return ok;

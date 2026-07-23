@@ -31,6 +31,10 @@ export default function ForgotPasswordPage() {
       const data = await res.json();
       if (res.ok) {
         if (data.previewUrl) setDevCode(data.previewUrl);
+        if (data.code) {
+          setCode(String(data.code).split(""));
+          setDevCode("__direct__");
+        }
         setStep("code");
       } else {
         setError(data.error || "Ошибка");
@@ -154,7 +158,12 @@ export default function ForgotPasswordPage() {
               <p className="text-sm text-[var(--text2)] mt-1">
                 Код отправлен на <strong className="text-[var(--text)]">{email}</strong>
               </p>
-              {devCode && (
+              {devCode === "__direct__" && (
+                <div className="mt-2 bg-violet-500/10 border border-violet-500/30 text-violet-300 rounded-lg px-3 py-2 text-xs">
+                  Код автоматически заполнен — нажмите «Подтвердить»
+                </div>
+              )}
+              {devCode && devCode !== "__direct__" && (
                 <div className="mt-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-lg px-3 py-2 text-xs">
                   SMTP не настроен.{" "}
                   <a href={devCode} target="_blank" rel="noreferrer" className="underline font-semibold">
