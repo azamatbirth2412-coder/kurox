@@ -86,6 +86,8 @@ function DownloadMenu({ ep, show, onToggle, animeTitle }: {
               <a
                 key={q}
                 href={dlHref(q)}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={() => onToggle()}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-white/70 hover:bg-violet-600/20 hover:text-white transition-colors"
               >
