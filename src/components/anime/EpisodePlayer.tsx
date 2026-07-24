@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Hls from "hls.js";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
-  ChevronLeft, ChevronRight, Loader2, AlertCircle, Settings, SkipForward, Zap, Download, Copy, Check
+  ChevronLeft, ChevronRight, Loader2, AlertCircle, Settings, SkipForward, Zap, Download
 } from "lucide-react";
 
 function useUserXp() {
@@ -131,6 +131,7 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
   const [showDownload, setShowDownload] = useState(false);
   const [dlProgress, setDlProgress] = useState<{ quality: string; done: number; total: number } | null>(null);
   const [dlReady, setDlReady] = useState<{ href: string; name: string } | null>(null);
+  const [dlError, setDlError] = useState<string | null>(null);
   const [buffered, setBuffered] = useState(0);
   const [introSkipped, setIntroSkipped] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -196,63 +197,68 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
     const qualityLabel = q.replace("hls_", "") + "p";
 
     setShowDownload(false);
+    setDlError(null);
+    setDlReady(null);
     setDlProgress({ quality: qualityLabel, done: 0, total: 0 });
 
     try {
-      // 1. Fetch the m3u8 manifest
-      const m3u8Proxy = `/api/proxy/hls?url=${encodeURIComponent(absUrl)}`;
-      const manifestRes = await fetch(m3u8Proxy);
-      if (!manifestRes.ok) throw new Error("manifest error");
+      // 1. Fetch the m3u8 manifest through proxy (proxy rewrites segment URLs)
+      const manifestRes = await fetch(`/api/proxy/hls?url=${encodeURIComponent(absUrl)}`);
+      if (!manifestRes.ok) throw new Error(`Ошибка манифеста: ${manifestRes.status}`);
       const manifest = await manifestRes.text();
 
-      // 2. Parse .ts segment URLs
+      // 2. Parse .ts segment URLs from manifest
+      // The proxy may return absolute CDN URLs or proxied URLs for segments
       const baseUrl = absUrl.substring(0, absUrl.lastIndexOf("/") + 1);
       const segments = manifest
         .split("\n")
         .map(l => l.trim())
         .filter(l => l && !l.startsWith("#"))
-        .map(l => (l.startsWith("http") ? l : baseUrl + l));
+        .map(l => {
+          if (l.startsWith("http")) return l;
+          if (l.startsWith("/api/")) return l; // already proxied
+          return baseUrl + l;
+        });
 
-      if (segments.length === 0) throw new Error("no segments");
+      if (segments.length === 0) throw new Error("Сегменты не найдены");
 
       setDlProgress({ quality: qualityLabel, done: 0, total: segments.length });
 
-      // 3. Download segments in batches of 6 (parallel)
-      const BATCH = 6;
-      const buffers: ArrayBuffer[] = new Array(segments.length);
+      // 3. Download segments in order (sequential for stability)
+      // Use Blob array — much more memory-efficient than a single Uint8Array
+      const blobs: Blob[] = new Array(segments.length);
       let done = 0;
+      const BATCH = 4;
 
       for (let i = 0; i < segments.length; i += BATCH) {
         await Promise.all(
           segments.slice(i, i + BATCH).map(async (seg, j) => {
-            const r = await fetch(`/api/proxy/hls?url=${encodeURIComponent(seg)}`);
-            buffers[i + j] = await r.arrayBuffer();
+            // Route through proxy to avoid CORS issues with direct CDN
+            const proxyTarget = seg.startsWith("/api/")
+              ? seg
+              : `/api/proxy/hls?url=${encodeURIComponent(seg)}`;
+            const r = await fetch(proxyTarget);
+            if (!r.ok) throw new Error(`Сегмент ${i + j}: HTTP ${r.status}`);
+            const buf = await r.arrayBuffer();
+            blobs[i + j] = new Blob([buf], { type: "video/mp2t" });
             done++;
             setDlProgress({ quality: qualityLabel, done, total: segments.length });
           })
         );
       }
 
-      // 4. Concatenate all segments into one .ts file
-      const totalBytes = buffers.reduce((s, b) => s + b.byteLength, 0);
-      const combined = new Uint8Array(totalBytes);
-      let offset = 0;
-      for (const buf of buffers) {
-        combined.set(new Uint8Array(buf), offset);
-        offset += buf.byteLength;
-      }
-
-      // 5. Create blob URL and show save button (browser requires user gesture for download)
-      const blob = new Blob([combined], { type: "video/mp2t" });
-      const href = URL.createObjectURL(blob);
+      // 4. Combine all segment blobs (efficient — no Uint8Array copy needed)
+      const combined = new Blob(blobs, { type: "video/mp2t" });
+      const href = URL.createObjectURL(combined);
       const safeName = title.replace(/[\\/:*?"<>|]/g, "").trim().slice(0, 60);
       const name = `${safeName} - Серия ${ep.ordinal} [${qualityLabel}].ts`;
+
       setDlProgress(null);
       setDlReady({ href, name });
-      // Auto-cleanup after 10 minutes
       setTimeout(() => { URL.revokeObjectURL(href); setDlReady(null); }, 10 * 60_000);
     } catch (err) {
       console.error("Download failed:", err);
+      setDlError(err instanceof Error ? err.message : "Ошибка скачивания");
       setDlProgress(null);
     }
   }
@@ -759,6 +765,20 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
             <Download size={13} />
             Сохранить
           </a>
+        </div>
+      )}
+
+      {/* Download error */}
+      {dlError && (
+        <div className="mt-2 bg-[var(--surface)] border border-red-500/30 rounded-xl px-4 py-3 flex items-center gap-3">
+          <AlertCircle size={16} className="text-red-400 flex-shrink-0" />
+          <p className="flex-1 text-xs text-red-400">{dlError}</p>
+          <button
+            onClick={() => setDlError(null)}
+            className="text-[10px] text-[var(--text3)] hover:text-white transition-colors px-2 py-1 rounded"
+          >
+            ✕
+          </button>
         </div>
       )}
     </div>

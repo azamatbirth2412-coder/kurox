@@ -53,9 +53,29 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  // Non-m3u8 segments → redirect directly to CDN (zero server bandwidth)
+  // Non-m3u8 segments (.ts) → proxy through server (redirect causes CORS errors on fetch)
   if (!target.includes(".m3u8")) {
-    return NextResponse.redirect(target, { status: 302 });
+    try {
+      const seg = await fetchWithTimeout(target, {
+        headers: {
+          "Referer": "https://anilibria.top/",
+          "Origin": "https://anilibria.top",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        },
+      }, 15_000);
+      if (!seg.ok) return new NextResponse("segment error", { status: 502 });
+      const buf = await seg.arrayBuffer();
+      return new NextResponse(buf, {
+        status: 200,
+        headers: {
+          "Content-Type": "video/mp2t",
+          "Access-Control-Allow-Origin": "*",
+          "Cache-Control": "public, max-age=3600",
+        },
+      });
+    } catch {
+      return new NextResponse("segment timeout", { status: 504 });
+    }
   }
 
   // Serve from cache if fresh (30 s)
