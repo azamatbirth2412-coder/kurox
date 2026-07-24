@@ -46,24 +46,33 @@ function proxyUrl(path: string | null): string | null {
   return `/api/proxy/hls?url=${encodeURIComponent(abs)}`;
 }
 
-function DownloadMenu({ ep, show, onToggle, onDownload, downloading }: {
+function DownloadMenu({ ep, show, onToggle, animeTitle }: {
   ep: Episode;
   show: boolean;
   onToggle: () => void;
-  onDownload: (q: Quality) => void;
-  downloading: boolean;
+  animeTitle: string;
 }) {
   const qualities = (["hls_1080", "hls_720", "hls_480"] as Quality[]).filter(q => ep[q]);
+
+  function dlHref(q: Quality) {
+    const raw = ep[q]!;
+    const absUrl = raw.startsWith("http") ? raw : CDN + raw;
+    const label = q.replace("hls_", "") + "p";
+    const safe = animeTitle.replace(/[\\/:*?"<>|]/g, "").trim().slice(0, 60);
+    const name = `${safe} - Серия ${ep.ordinal} [${label}].ts`;
+    return `/api/download/episode?url=${encodeURIComponent(absUrl)}&name=${encodeURIComponent(name)}`;
+  }
+
   return (
     <div className="relative">
       <button
-        onClick={e => { e.stopPropagation(); if (!downloading) onToggle(); }}
+        onClick={e => { e.stopPropagation(); onToggle(); }}
         title="Скачать эпизод"
-        className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md hover:bg-white/10 transition-colors ${downloading ? "text-violet-400 animate-pulse cursor-default" : "text-white/60 hover:text-white"}`}
+        className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition-colors"
       >
         <Download size={14} />
       </button>
-      {show && !downloading && (
+      {show && (
         <div
           className="absolute bottom-10 right-0 bg-[#13131f] border border-white/10 rounded-xl shadow-2xl z-50 w-[190px] overflow-hidden"
           onClick={e => e.stopPropagation()}
@@ -74,14 +83,15 @@ function DownloadMenu({ ep, show, onToggle, onDownload, downloading }: {
           </div>
           <div className="p-2 space-y-1">
             {qualities.map(q => (
-              <button
+              <a
                 key={q}
-                onClick={() => { onDownload(q); }}
+                href={dlHref(q)}
+                onClick={() => onToggle()}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-white/70 hover:bg-violet-600/20 hover:text-white transition-colors"
               >
                 <Download size={13} className="text-violet-400 flex-shrink-0" />
                 {q.replace("hls_", "")}p
-              </button>
+              </a>
             ))}
           </div>
         </div>
@@ -129,9 +139,6 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
   const [showControls, setShowControls] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showDownload, setShowDownload] = useState(false);
-  const [dlProgress, setDlProgress] = useState<{ quality: string; done: number; total: number } | null>(null);
-  const [dlReady, setDlReady] = useState<{ href: string; name: string } | null>(null);
-  const [dlError, setDlError] = useState<string | null>(null);
   const [buffered, setBuffered] = useState(0);
   const [introSkipped, setIntroSkipped] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -183,84 +190,6 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
 
   function getBestUrl(ep: Episode, q: Quality) {
     return proxyUrl(ep[q] ?? ep.hls_1080 ?? ep.hls_720 ?? ep.hls_480);
-  }
-
-  function directCdnUrl(path: string | null): string | null {
-    if (!path) return null;
-    return path.startsWith("http") ? path : CDN + path;
-  }
-
-  async function downloadEpisode(ep: Episode, q: Quality) {
-    const rawPath = ep[q];
-    if (!rawPath) return;
-    const absUrl = rawPath.startsWith("http") ? rawPath : CDN + rawPath;
-    const qualityLabel = q.replace("hls_", "") + "p";
-
-    setShowDownload(false);
-    setDlError(null);
-    setDlReady(null);
-    setDlProgress({ quality: qualityLabel, done: 0, total: 0 });
-
-    try {
-      // 1. Fetch the m3u8 manifest through proxy (proxy rewrites segment URLs)
-      const manifestRes = await fetch(`/api/proxy/hls?url=${encodeURIComponent(absUrl)}`);
-      if (!manifestRes.ok) throw new Error(`Ошибка манифеста: ${manifestRes.status}`);
-      const manifest = await manifestRes.text();
-
-      // 2. Parse .ts segment URLs from manifest
-      // The proxy may return absolute CDN URLs or proxied URLs for segments
-      const baseUrl = absUrl.substring(0, absUrl.lastIndexOf("/") + 1);
-      const segments = manifest
-        .split("\n")
-        .map(l => l.trim())
-        .filter(l => l && !l.startsWith("#"))
-        .map(l => {
-          if (l.startsWith("http")) return l;
-          if (l.startsWith("/api/")) return l; // already proxied
-          return baseUrl + l;
-        });
-
-      if (segments.length === 0) throw new Error("Сегменты не найдены");
-
-      setDlProgress({ quality: qualityLabel, done: 0, total: segments.length });
-
-      // 3. Download segments in order (sequential for stability)
-      // Use Blob array — much more memory-efficient than a single Uint8Array
-      const blobs: Blob[] = new Array(segments.length);
-      let done = 0;
-      const BATCH = 4;
-
-      for (let i = 0; i < segments.length; i += BATCH) {
-        await Promise.all(
-          segments.slice(i, i + BATCH).map(async (seg, j) => {
-            // Route through proxy to avoid CORS issues with direct CDN
-            const proxyTarget = seg.startsWith("/api/")
-              ? seg
-              : `/api/proxy/hls?url=${encodeURIComponent(seg)}`;
-            const r = await fetch(proxyTarget);
-            if (!r.ok) throw new Error(`Сегмент ${i + j}: HTTP ${r.status}`);
-            const buf = await r.arrayBuffer();
-            blobs[i + j] = new Blob([buf], { type: "video/mp2t" });
-            done++;
-            setDlProgress({ quality: qualityLabel, done, total: segments.length });
-          })
-        );
-      }
-
-      // 4. Combine all segment blobs (efficient — no Uint8Array copy needed)
-      const combined = new Blob(blobs, { type: "video/mp2t" });
-      const href = URL.createObjectURL(combined);
-      const safeName = title.replace(/[\\/:*?"<>|]/g, "").trim().slice(0, 60);
-      const name = `${safeName} - Серия ${ep.ordinal} [${qualityLabel}].ts`;
-
-      setDlProgress(null);
-      setDlReady({ href, name });
-      setTimeout(() => { URL.revokeObjectURL(href); setDlReady(null); }, 10 * 60_000);
-    } catch (err) {
-      console.error("Download failed:", err);
-      setDlError(err instanceof Error ? err.message : "Ошибка скачивания");
-      setDlProgress(null);
-    }
   }
 
   function killHls(video: HTMLVideoElement) {
@@ -659,8 +588,7 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
                   ep={currentEp}
                   show={showDownload}
                   onToggle={() => { setShowDownload(s => !s); setShowSettings(false); }}
-                  onDownload={(q) => downloadEpisode(currentEp, q)}
-                  downloading={!!dlProgress}
+                  animeTitle={title}
                 />
               )}
 
@@ -719,68 +647,6 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
         </div>
       </div>
 
-      {/* Download progress */}
-      {dlProgress && (
-        <div className="mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs text-[var(--text2)]">
-              Скачивание {dlProgress.quality}…
-            </span>
-            <span className="text-xs text-violet-400 font-medium tabular-nums">
-              {dlProgress.total > 0
-                ? `${Math.round((dlProgress.done / dlProgress.total) * 100)}%`
-                : "Загрузка…"}
-            </span>
-          </div>
-          <div className="h-1.5 bg-[var(--surface2)] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-violet-600 to-violet-400 rounded-full transition-all duration-200"
-              style={{ width: dlProgress.total > 0 ? `${(dlProgress.done / dlProgress.total) * 100}%` : "5%" }}
-            />
-          </div>
-          {dlProgress.total > 0 && (
-            <p className="text-[10px] text-[var(--text3)] mt-1">
-              {dlProgress.done} / {dlProgress.total} сегментов
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Save button — appears after download completes */}
-      {dlReady && (
-        <div className="mt-2 bg-[var(--surface)] border border-green-500/30 rounded-xl px-4 py-3 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-green-500/15 flex items-center justify-center flex-shrink-0">
-            <Download size={15} className="text-green-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-green-400">Файл готов!</p>
-            <p className="text-[10px] text-[var(--text3)] truncate mt-0.5">{dlReady.name}</p>
-          </div>
-          <a
-            href={dlReady.href}
-            download={dlReady.name}
-            onClick={() => setDlReady(null)}
-            className="flex-shrink-0 flex items-center gap-1.5 bg-green-500 hover:bg-green-400 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
-          >
-            <Download size={13} />
-            Сохранить
-          </a>
-        </div>
-      )}
-
-      {/* Download error */}
-      {dlError && (
-        <div className="mt-2 bg-[var(--surface)] border border-red-500/30 rounded-xl px-4 py-3 flex items-center gap-3">
-          <AlertCircle size={16} className="text-red-400 flex-shrink-0" />
-          <p className="flex-1 text-xs text-red-400">{dlError}</p>
-          <button
-            onClick={() => setDlError(null)}
-            className="text-[10px] text-[var(--text3)] hover:text-white transition-colors px-2 py-1 rounded"
-          >
-            ✕
-          </button>
-        </div>
-      )}
     </div>
   );
 }
