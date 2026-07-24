@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Hls from "hls.js";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
-  ChevronLeft, ChevronRight, Loader2, AlertCircle, Settings, SkipForward, Zap, Download
+  ChevronLeft, ChevronRight, Loader2, AlertCircle, Settings, SkipForward, Zap, Download, Copy, Check
 } from "lucide-react";
 
 function useUserXp() {
@@ -44,6 +44,73 @@ function proxyUrl(path: string | null): string | null {
   if (!path) return null;
   const abs = path.startsWith("http") ? path : CDN + path;
   return `/api/proxy/hls?url=${encodeURIComponent(abs)}`;
+}
+
+function DownloadMenu({ ep, show, onToggle, directCdnUrl }: {
+  ep: Episode;
+  show: boolean;
+  onToggle: () => void;
+  directCdnUrl: (path: string | null) => string | null;
+}) {
+  const [copied, setCopied] = useState<string | null>(null);
+  const qualities = (["hls_1080", "hls_720", "hls_480"] as Quality[]).filter(q => ep[q]);
+
+  function copy(url: string, key: string) {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(key);
+      setTimeout(() => setCopied(null), 2000);
+    });
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={e => { e.stopPropagation(); onToggle(); }}
+        title="Скачать эпизод"
+        className="flex items-center gap-1 text-white/60 hover:text-white text-xs font-medium px-2 py-1 rounded-md hover:bg-white/10 transition-colors"
+      >
+        <Download size={14} />
+      </button>
+      {show && (
+        <div
+          className="absolute bottom-10 right-0 bg-[#13131f] border border-white/10 rounded-xl shadow-2xl z-50 w-[270px] overflow-hidden"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="px-3 pt-3 pb-2 border-b border-white/8">
+            <p className="text-white text-xs font-semibold">Скачать серию {ep.ordinal}</p>
+            <p className="text-white/40 text-[10px] mt-0.5">Скопируй ссылку → открой в VLC или скачай через yt-dlp</p>
+          </div>
+          <div className="p-2 space-y-1">
+            {qualities.map(q => {
+              const url = directCdnUrl(ep[q]);
+              if (!url) return null;
+              const label = q.replace("hls_", "") + "p";
+              const key = q;
+              return (
+                <div key={q} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 group">
+                  <span className="text-sm text-white/70 w-10 flex-shrink-0 font-medium">{label}</span>
+                  <span className="flex-1 text-[10px] text-white/25 truncate font-mono">{url.replace("https://", "")}</span>
+                  <button
+                    onClick={() => copy(url, key)}
+                    className="flex items-center gap-1 flex-shrink-0 text-[10px] px-2 py-1 rounded-md bg-violet-600/20 hover:bg-violet-600/40 text-violet-300 transition-colors"
+                  >
+                    {copied === key ? <Check size={10} /> : <Copy size={10} />}
+                    {copied === key ? "Скопировано" : "Копировать"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          <div className="px-3 py-2 border-t border-white/8 bg-white/3">
+            <p className="text-[9px] text-white/30 leading-tight">
+              <span className="text-white/50 font-medium">VLC:</span> Media → Открыть URL → вставь ссылку<br />
+              <span className="text-white/50 font-medium">yt-dlp:</span> yt-dlp &quot;скопированная ссылка&quot;
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function masterUrl(ep: Episode | null): string | null {
@@ -535,46 +602,7 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
 
               {/* Download */}
               {currentEp && (currentEp.hls_480 || currentEp.hls_720 || currentEp.hls_1080) && (
-                <div className="relative">
-                  <button
-                    onClick={e => { e.stopPropagation(); setShowDownload(s => !s); setShowSettings(false); }}
-                    title="Скачать эпизод"
-                    className="flex items-center gap-1 text-white/60 hover:text-white text-xs font-medium px-2 py-1 rounded-md hover:bg-white/10 transition-colors"
-                  >
-                    <Download size={14} />
-                  </button>
-                  {showDownload && (
-                    <div
-                      className="absolute bottom-9 right-0 bg-[#18182a]/97 backdrop-blur-xl border border-white/10 rounded-xl p-2.5 min-w-[160px] shadow-2xl z-50"
-                      onClick={e => e.stopPropagation()}
-                    >
-                      <p className="text-[10px] text-white/35 uppercase tracking-wider mb-1.5 px-1">Скачать</p>
-                      {(["hls_1080", "hls_720", "hls_480"] as Quality[])
-                        .filter(q => currentEp[q])
-                        .map(q => {
-                          const url = directCdnUrl(currentEp[q]);
-                          if (!url) return null;
-                          const label = q.replace("hls_", "") + "p";
-                          return (
-                            <a
-                              key={q}
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={() => setShowDownload(false)}
-                              className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-white/65 hover:bg-white/10 hover:text-white transition-colors"
-                            >
-                              <Download size={12} className="flex-shrink-0 text-violet-400" />
-                              {label}
-                            </a>
-                          );
-                        })}
-                      <p className="text-[9px] text-white/25 mt-2 px-1 leading-tight">
-                        Открыть в VLC или yt-dlp
-                      </p>
-                    </div>
-                  )}
-                </div>
+                <DownloadMenu ep={currentEp} show={showDownload} onToggle={() => { setShowDownload(s => !s); setShowSettings(false); }} directCdnUrl={directCdnUrl} />
               )}
 
               {/* Quality / Settings */}
