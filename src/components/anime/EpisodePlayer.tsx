@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Hls from "hls.js";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
-  ChevronLeft, ChevronRight, Loader2, AlertCircle, Settings, SkipForward, Zap
+  ChevronLeft, ChevronRight, Loader2, AlertCircle, Settings, SkipForward, Zap, Download
 } from "lucide-react";
 
 function useUserXp() {
@@ -84,6 +84,7 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
   const [fullscreen, setFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [showDownload, setShowDownload] = useState(false);
   const [buffered, setBuffered] = useState(0);
   const [introSkipped, setIntroSkipped] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -135,6 +136,11 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
 
   function getBestUrl(ep: Episode, q: Quality) {
     return proxyUrl(ep[q] ?? ep.hls_1080 ?? ep.hls_720 ?? ep.hls_480);
+  }
+
+  function directCdnUrl(path: string | null): string | null {
+    if (!path) return null;
+    return path.startsWith("http") ? path : CDN + path;
   }
 
   function killHls(video: HTMLVideoElement) {
@@ -475,7 +481,7 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
           </div>
 
           {/* Spacer */}
-          <div className="flex-1" onClick={togglePlay} style={{ cursor: "pointer" }} />
+          <div className="flex-1" onClick={() => { togglePlay(); setShowDownload(false); setShowSettings(false); }} style={{ cursor: "pointer" }} />
 
           {/* Bottom controls */}
           <div className="px-3 pb-3 pt-10 bg-gradient-to-t from-black/85 via-black/40 to-transparent">
@@ -527,10 +533,54 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
 
               <div className="flex-1" />
 
+              {/* Download */}
+              {currentEp && (currentEp.hls_480 || currentEp.hls_720 || currentEp.hls_1080) && (
+                <div className="relative">
+                  <button
+                    onClick={e => { e.stopPropagation(); setShowDownload(s => !s); setShowSettings(false); }}
+                    title="Скачать эпизод"
+                    className="flex items-center gap-1 text-white/60 hover:text-white text-xs font-medium px-2 py-1 rounded-md hover:bg-white/10 transition-colors"
+                  >
+                    <Download size={14} />
+                  </button>
+                  {showDownload && (
+                    <div
+                      className="absolute bottom-9 right-0 bg-[#18182a]/97 backdrop-blur-xl border border-white/10 rounded-xl p-2.5 min-w-[160px] shadow-2xl z-50"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <p className="text-[10px] text-white/35 uppercase tracking-wider mb-1.5 px-1">Скачать</p>
+                      {(["hls_1080", "hls_720", "hls_480"] as Quality[])
+                        .filter(q => currentEp[q])
+                        .map(q => {
+                          const url = directCdnUrl(currentEp[q]);
+                          if (!url) return null;
+                          const label = q.replace("hls_", "") + "p";
+                          return (
+                            <a
+                              key={q}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setShowDownload(false)}
+                              className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-white/65 hover:bg-white/10 hover:text-white transition-colors"
+                            >
+                              <Download size={12} className="flex-shrink-0 text-violet-400" />
+                              {label}
+                            </a>
+                          );
+                        })}
+                      <p className="text-[9px] text-white/25 mt-2 px-1 leading-tight">
+                        Открыть в VLC или yt-dlp
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Quality / Settings */}
               <div className="relative">
                 <button
-                  onClick={() => setShowSettings(s => !s)}
+                  onClick={() => { setShowSettings(s => !s); setShowDownload(false); }}
                   className="flex items-center gap-1 text-white/60 hover:text-white text-xs font-medium px-2 py-1 rounded-md hover:bg-white/10 transition-colors"
                 >
                   {quality === "auto"
