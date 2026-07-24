@@ -54,18 +54,18 @@ export function HeroBannerSlider({ items }: Props) {
   return (
     <section className="relative -mx-4 overflow-hidden" style={{ minHeight: 520 }}>
 
-      {/* Previous poster — fades out */}
+      {/* Previous poster — stays visible during transition so hero never goes blank */}
       {prevItem?.poster && (
-        <div className="absolute inset-0 transition-opacity duration-600 opacity-0" style={{ zIndex: 1 }}>
+        <div className="absolute inset-0 transition-opacity duration-500" style={{ zIndex: 1, opacity: transitioning ? 1 : 0 }}>
           <Image src={prevItem.poster} alt={prevItem.title} fill priority className="object-cover object-top" />
           <div className="absolute inset-0 bg-gradient-to-r from-[var(--bg)] via-[var(--bg)]/80 to-[var(--bg)]/30" />
           <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)]/10 to-[var(--bg)]/75" />
         </div>
       )}
 
-      {/* Current poster — fades in */}
+      {/* Current poster — fades in after transition */}
       <div
-        className="absolute inset-0 transition-opacity duration-600"
+        className="absolute inset-0 transition-opacity duration-500"
         style={{ zIndex: 2, opacity: transitioning ? 0 : 1 }}
       >
         {current.poster ? (
