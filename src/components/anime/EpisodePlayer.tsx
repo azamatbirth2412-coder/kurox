@@ -130,6 +130,7 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
   const [showSettings, setShowSettings] = useState(false);
   const [showDownload, setShowDownload] = useState(false);
   const [dlProgress, setDlProgress] = useState<{ quality: string; done: number; total: number } | null>(null);
+  const [dlReady, setDlReady] = useState<{ href: string; name: string } | null>(null);
   const [buffered, setBuffered] = useState(0);
   const [introSkipped, setIntroSkipped] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -241,20 +242,17 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
         offset += buf.byteLength;
       }
 
-      // 5. Trigger browser download
+      // 5. Create blob URL and show save button (browser requires user gesture for download)
       const blob = new Blob([combined], { type: "video/mp2t" });
       const href = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = href;
       const safeName = title.replace(/[\\/:*?"<>|]/g, "").trim().slice(0, 60);
-      a.download = `${safeName} - Серия ${ep.ordinal} [${qualityLabel}].ts`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(href), 30_000);
+      const name = `${safeName} - Серия ${ep.ordinal} [${qualityLabel}].ts`;
+      setDlProgress(null);
+      setDlReady({ href, name });
+      // Auto-cleanup after 10 minutes
+      setTimeout(() => { URL.revokeObjectURL(href); setDlReady(null); }, 10 * 60_000);
     } catch (err) {
       console.error("Download failed:", err);
-    } finally {
       setDlProgress(null);
     }
   }
@@ -715,7 +713,7 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
         </div>
       </div>
 
-      {/* Download progress bar */}
+      {/* Download progress */}
       {dlProgress && (
         <div className="mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3">
           <div className="flex items-center justify-between mb-1.5">
@@ -739,6 +737,28 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
               {dlProgress.done} / {dlProgress.total} сегментов
             </p>
           )}
+        </div>
+      )}
+
+      {/* Save button — appears after download completes */}
+      {dlReady && (
+        <div className="mt-2 bg-[var(--surface)] border border-green-500/30 rounded-xl px-4 py-3 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-green-500/15 flex items-center justify-center flex-shrink-0">
+            <Download size={15} className="text-green-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-green-400">Файл готов!</p>
+            <p className="text-[10px] text-[var(--text3)] truncate mt-0.5">{dlReady.name}</p>
+          </div>
+          <a
+            href={dlReady.href}
+            download={dlReady.name}
+            onClick={() => setDlReady(null)}
+            className="flex-shrink-0 flex items-center gap-1.5 bg-green-500 hover:bg-green-400 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+          >
+            <Download size={13} />
+            Сохранить
+          </a>
         </div>
       )}
     </div>
