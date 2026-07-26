@@ -41,7 +41,7 @@ function Pagination({ page, totalPages, buildUrlFn }: {
     <div className="flex flex-wrap justify-center items-center gap-1.5 mt-6">
       {page > 1 && (
         <a href={buildUrlFn(page - 1)}
-          className="flex items-center gap-1 px-3 py-1.5 bg-[var(--surface)] border border-[var(--border)] hover:border-violet-400/50 rounded-lg text-sm transition-all">
+          className="flex items-center gap-1 px-3 py-1.5 bg-[var(--surface)] border border-[var(--border)] hover:border-violet-400/50 rounded-lg text-sm transition-colors">
           <ChevronLeft size={13} /> Назад
         </a>
       )}
@@ -50,7 +50,7 @@ function Pagination({ page, totalPages, buildUrlFn }: {
           <span key={`d-${i}`} className="px-2 text-[var(--text3)] text-sm">…</span>
         ) : (
           <a key={item} href={buildUrlFn(item)}
-            className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${item === page
+            className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${item === page
               ? "bg-violet-500 text-white"
               : "bg-[var(--surface)] border border-[var(--border)] hover:border-violet-400/50"}`}>
             {item}
@@ -59,7 +59,7 @@ function Pagination({ page, totalPages, buildUrlFn }: {
       )}
       {page < totalPages && (
         <a href={buildUrlFn(page + 1)}
-          className="flex items-center gap-1 px-3 py-1.5 bg-[var(--surface)] border border-[var(--border)] hover:border-violet-400/50 rounded-lg text-sm transition-all">
+          className="flex items-center gap-1 px-3 py-1.5 bg-[var(--surface)] border border-[var(--border)] hover:border-violet-400/50 rounded-lg text-sm transition-colors">
           Вперёд <ChevronRight size={13} />
         </a>
       )}

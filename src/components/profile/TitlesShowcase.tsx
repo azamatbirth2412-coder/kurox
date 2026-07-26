@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Award, Lock, Loader2, Check, ChevronDown, ExternalLink, Sparkles, Crown, Gem, Star, Shield } from "lucide-react";
 import Link from "next/link";
+import { RARITY } from "@/lib/rarity";
 
 interface AnimeReq { slug: string; name: string; episodes: number }
 interface ShowcaseTitle {
@@ -488,6 +489,15 @@ export function TitlesShowcase({ allTitles, activeTitleId, isAdmin }: TitlesShow
     { key:"common",    label:"Обычные",      count: null },
   ];
 
+  const renderCard = (t: ShowcaseTitle) => (
+    <TitleCard key={t.id} title={t}
+      isActive={activeId === t.id} isSaving={savingId === t.id}
+      claimState={claimStates[t.id] ?? "idle"} claimError={claimErrors[t.id] ?? ""}
+      onEquip={() => handleEquip(t.id)} onClaim={() => handleClaim(t.id)}
+      isAdmin={isAdmin}
+    />
+  );
+
   return (
     <div style={{ marginTop: 28 }} id="titles">
       <style>{`
@@ -556,17 +566,41 @@ export function TitlesShowcase({ allTitles, activeTitleId, isAdmin }: TitlesShow
         ))}
       </div>
 
-      {/* Grid */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
-        {filtered.map(t => (
-          <TitleCard key={t.id} title={t}
-            isActive={activeId === t.id} isSaving={savingId === t.id}
-            claimState={claimStates[t.id] ?? "idle"} claimError={claimErrors[t.id] ?? ""}
-            onEquip={() => handleEquip(t.id)} onClaim={() => handleClaim(t.id)}
-            isAdmin={isAdmin}
-          />
-        ))}
-      </div>
+      {/* Grid — grouped into rarity sections when viewing "all", flat otherwise */}
+      {filter === "all" ? (
+        <div style={{ display:"flex", flexDirection:"column", gap:24 }}>
+          {(["legendary","epic","rare","common"] as const).map(r => {
+            const items = allTitles
+              .filter(t => t.rarity === r)
+              .sort((a, b) => (a.earned === b.earned ? 0 : a.earned ? -1 : 1));
+            if (!items.length) return null;
+            const rmeta = RARITY_META[r];
+            const rcolor = RARITY[r].color;
+            const earnedInGroup = items.filter(t => t.earned).length;
+            return (
+              <div key={r}>
+                {/* Rarity section header */}
+                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+                  <span style={{ display:"inline-flex", alignItems:"center", gap:5, color:rcolor, fontSize:12, fontWeight:900, letterSpacing:"0.09em", textTransform:"uppercase", textShadow:`0 0 12px ${rcolor}55` }}>
+                    {rmeta.icon} {rmeta.label}
+                  </span>
+                  <span style={{ height:1, flex:1, background:`linear-gradient(90deg, ${rcolor}66, transparent)` }} />
+                  <span style={{ fontSize:10, fontWeight:800, color:rcolor, background:`${rcolor}18`, border:`1px solid ${rcolor}40`, padding:"2px 9px", borderRadius:99 }}>
+                    {earnedInGroup}/{items.length}
+                  </span>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+                  {items.map(renderCard)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+          {filtered.map(renderCard)}
+        </div>
+      )}
 
       {filtered.length === 0 && (
         <div style={{ textAlign:"center", padding:"48px 0", color:"rgba(255,255,255,.2)", fontSize:13 }}>

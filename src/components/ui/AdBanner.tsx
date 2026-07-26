@@ -101,7 +101,7 @@ export function AdBanner({ slot, className = "", showEmpty = false }: AdBannerPr
               <button
                 key={i}
                 onClick={() => { setFading(true); setTimeout(() => { setActiveIdx(i); setFading(false); }, 400); }}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${i === activeIdx ? "bg-white w-3" : "bg-white/40"}`}
+                className={`w-1.5 h-1.5 rounded-full transition-[width,background-color] ${i === activeIdx ? "bg-white w-3" : "bg-white/40"}`}
               />
             ))}
           </div>

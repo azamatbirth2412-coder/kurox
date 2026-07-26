@@ -1,15 +1,15 @@
 "use client";
 import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
   // Only allow same-origin relative paths — prevents open redirect via ?callbackUrl=https://evil.com
   const rawCallback = searchParams.get("callbackUrl") || "/";
@@ -82,7 +82,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <img src="/logo.png" alt="Kurox" width={40} height={40} className="rounded-xl" />
+            <Image src="/logo.png" alt="Kurox" width={40} height={40} className="rounded-xl" />
             <span className="text-2xl font-black text-[#c4b5fd]">KUROX</span>
           </Link>
           <h1 className="text-xl font-bold mt-2">Войти в аккаунт</h1>

@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Trash2, X } from 'lucide-react'
+import { Trash2, X, Play } from 'lucide-react'
 
 interface HistoryItem {
   id: string
@@ -68,21 +68,33 @@ export function WatchHistorySection({ initial }: { initial: HistoryItem[] }) {
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+      {/* Netflix-style horizontal "continue watching" row */}
+      <div className="h-scroll -mx-1 px-1">
         {items.map(h => (
-          <div key={h.id} className="relative group bg-gray-900 rounded-xl overflow-hidden">
-            <Link href={h.slug ? `/anime/${h.slug}` : '/anime'}>
-              <div className="aspect-[2/3] relative">
+          <div key={h.id} className="relative group w-32 sm:w-36 flex-shrink-0">
+            <Link href={h.slug ? `/anime/${h.slug}` : '/anime'} className="block">
+              <div className="aspect-[2/3] relative rounded-xl overflow-hidden bg-[var(--surface2)] ring-1 ring-white/5">
                 {h.poster ? (
-                  <Image src={h.poster} alt={h.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <Image src={h.poster} alt={h.title} fill sizes="144px" className="object-cover group-hover:scale-[1.05] transition-transform duration-300" />
                 ) : (
-                  <div className="w-full h-full bg-gray-700" />
+                  <div className="w-full h-full bg-[var(--surface3)]" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
+
+                {/* Play affordance on hover */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="w-11 h-11 rounded-full bg-[var(--profile-accent,var(--accent))]/90 backdrop-blur-md flex items-center justify-center shadow-lg">
+                    <Play size={18} className="text-white fill-white ml-0.5" />
+                  </span>
+                </div>
+
+                {/* Episode chip */}
+                <span className="absolute bottom-1.5 left-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-white">
+                  Серия {h.episodeNum}
+                </span>
               </div>
-              <div className="p-2 text-xs">
-                <div className="font-medium line-clamp-1">{h.title || 'Аниме'}</div>
-                <div className="text-gray-400">Серия {h.episodeNum}</div>
+              <div className="pt-1.5 px-0.5">
+                <div className="text-xs font-semibold line-clamp-1 text-[var(--text)]">{h.title || 'Аниме'}</div>
               </div>
             </Link>
 
@@ -90,7 +102,7 @@ export function WatchHistorySection({ initial }: { initial: HistoryItem[] }) {
             <button
               onClick={() => deleteOne(h.id)}
               disabled={deleting === h.id}
-              className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/70 text-gray-400 hover:text-red-400 hover:bg-black/90 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 disabled:opacity-50"
+              className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/70 text-gray-300 hover:text-red-400 hover:bg-black/90 transition-[color,background-color,opacity] flex items-center justify-center opacity-0 group-hover:opacity-100 disabled:opacity-50"
               title="Удалить из истории"
             >
               {deleting === h.id ? (

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth, isUserBanned } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { COMMENT_CONFIG } from "@/lib/comment-config";
+import { filterStickerTokens } from "@/lib/stickers";
+import { calcLevel } from "@/lib/level";
 
 const createSchema = z.object({
   animeId: z.string().min(1),
@@ -110,8 +112,13 @@ export async function POST(req: NextRequest) {
   const userId = session.user.id;
 
   // JWT sessions cache the role — a user banned after login still has a valid
-  // token, so re-check the DB before accepting content
-  if (await isUserBanned(userId)) {
+  // token, so re-check the DB before accepting content. The same lookup provides
+  // xp/premium used to gate which sticker packs this user may post.
+  const dbUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, xp: true, isPremium: true },
+  });
+  if (!dbUser || dbUser.role === "BANNED") {
     return NextResponse.json({ error: "Аккаунт заблокирован" }, { status: 403 });
   }
 
@@ -141,7 +148,14 @@ export async function POST(req: NextRequest) {
   }
 
   const { animeId } = parsed.data;
-  const text = sanitizeText(parsed.data.text);
+  // Strip HTML, then drop any sticker tokens from packs the user hasn't unlocked
+  // (unknown/locked ids are removed; legitimate ones and all text are kept).
+  const text = filterStickerTokens(
+    sanitizeText(parsed.data.text),
+    calcLevel(dbUser.xp),
+    dbUser.isPremium,
+    dbUser.role === "ADMIN"
+  );
 
   if (text.length < COMMENT_CONFIG.MIN_LENGTH) {
     return NextResponse.json({ error: "Комментарий слишком короткий" }, { status: 400 });

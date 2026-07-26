@@ -10,9 +10,14 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { xp: true },
+    select: { xp: true, isPremium: true, role: true },
   });
   if (!user) return NextResponse.json({ xp: 0, level: 0 });
 
-  return NextResponse.json({ xp: user.xp, level: calcLevel(user.xp) });
+  return NextResponse.json({
+    xp: user.xp,
+    level: calcLevel(user.xp),
+    isPremium: user.isPremium,
+    isAdmin: user.role === "ADMIN",
+  });
 }

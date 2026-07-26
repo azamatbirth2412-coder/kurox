@@ -114,7 +114,7 @@ export default async function AdminDashboard() {
             </>
           );
           return (
-            <div key={s.label} className={`bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 ${s.href ? "hover:border-violet-500/50 hover:bg-[var(--surface2)] transition-all cursor-pointer" : ""}`}>
+            <div key={s.label} className={`bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 ${s.href ? "hover:border-violet-500/50 hover:bg-[var(--surface2)] transition-colors cursor-pointer" : ""}`}>
               {s.href ? <Link href={s.href} className="block">{inner}</Link> : inner}
             </div>
           );
@@ -129,7 +129,7 @@ export default async function AdminDashboard() {
             <Link
               key={a.href}
               href={a.href}
-              className="group flex items-center gap-3 bg-[var(--surface)] border border-[var(--border)] rounded-2xl px-4 py-3.5 hover:border-violet-500/50 hover:bg-violet-500/5 transition-all"
+              className="group flex items-center gap-3 bg-[var(--surface)] border border-[var(--border)] rounded-2xl px-4 py-3.5 hover:border-violet-500/50 hover:bg-violet-500/5 transition-colors"
             >
               <div className="w-9 h-9 rounded-xl bg-violet-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-500/20 transition-colors">
                 <a.icon size={16} className="text-violet-400" />
@@ -187,7 +187,7 @@ export default async function AdminDashboard() {
           <div className="flex flex-wrap gap-3">
             {todayAnime.map(a => (
               <Link key={a.id} href={`/anime/${animeSlug(a)}`} target="_blank"
-                className="flex items-center gap-2 bg-[var(--surface2)] hover:bg-rose-500/10 border border-[var(--border)] hover:border-rose-500/30 rounded-xl px-3 py-2 transition-all group">
+                className="flex items-center gap-2 bg-[var(--surface2)] hover:bg-rose-500/10 border border-[var(--border)] hover:border-rose-500/30 rounded-xl px-3 py-2 transition-colors group">
                 <div className="w-8 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-[var(--surface3)]">
                   {animePoster(a) && (
                     <Image src={animePoster(a)} alt={animeTitle(a)} width={32} height={40} className="object-cover w-full h-full" />

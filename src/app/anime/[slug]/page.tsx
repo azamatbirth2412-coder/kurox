@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  getByCode, getById, getByGenre, getPopular, getTrending, animePoster, animeSlug, animeTitle, animeYear, animeEpisodes,
+  getByCode, getById, getByGenre, getPopular, getTrending, animePoster, animeSlug, animeTitle, animeYear, animeEpisodes, animeRating,
   type AnilibriaAnime,
 } from "@/lib/anilibria";
 
@@ -389,6 +389,7 @@ export default async function AnimePage({ params }: PageProps) {
                 poster: animePoster(a), year: animeYear(a),
                 genres: a.genres?.slice(0,2).map(g => g.name) ?? [],
                 isOngoing: !!a.is_ongoing, episodes: a.episodes_total ?? null,
+                rating: animeRating(a),
               }))} />
             </div>
           )}
@@ -463,7 +464,7 @@ export default async function AnimePage({ params }: PageProps) {
               <div className="flex flex-wrap gap-1.5">
                 {genres.map(g => (
                   <Link key={g.id} href={`/anime?genre=${encodeURIComponent(g.name)}`}
-                    className="px-2.5 py-1 bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)]/50 hover:text-[var(--accent)] rounded-lg text-xs transition-all">
+                    className="px-2.5 py-1 bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)]/50 hover:text-[var(--accent)] rounded-lg text-xs transition-colors">
                     {g.name}
                   </Link>
                 ))}
@@ -514,6 +515,7 @@ export default async function AnimePage({ params }: PageProps) {
                   poster: animePoster(a), year: animeYear(a),
                   genres: a.genres?.slice(0,2).map(g => g.name) ?? [],
                   isOngoing: !!a.is_ongoing, episodes: a.episodes_total ?? null,
+                  rating: animeRating(a),
                 }))} />
               </div>
             )}

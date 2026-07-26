@@ -2,6 +2,7 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { Mail, ArrowLeft, CheckCircle, Lock, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 type Step = "email" | "code" | "password" | "done";
@@ -103,7 +104,7 @@ export default function ForgotPasswordPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <img src="/logo.png" alt="Kurox" width={40} height={40} className="rounded-xl" />
+            <Image src="/logo.png" alt="Kurox" width={40} height={40} className="rounded-xl" />
             <span className="text-2xl font-black text-[#c4b5fd]">KUROX</span>
           </Link>
 
@@ -111,7 +112,7 @@ export default function ForgotPasswordPage() {
           <div className="flex items-center justify-center gap-2 mt-4">
             {(["email", "code", "password"] as Step[]).map((s, i) => (
               <div key={s} className="flex items-center gap-2">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-[transform,background-color,color] ${
                   step === s ? "bg-[var(--accent)] text-white scale-110" :
                   (["email","code","password","done"].indexOf(step) > i) ? "bg-violet-900 text-violet-300" :
                   "bg-[var(--surface2)] text-[var(--text3)]"

@@ -2,7 +2,7 @@
 import { useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Star, Sparkles } from "lucide-react";
 
 interface SimilarAnime {
   id: number;
@@ -13,6 +13,15 @@ interface SimilarAnime {
   genres: string[];
   isOngoing: boolean;
   episodes: number | null;
+  rating?: number | null;
+}
+
+// Score → colour, mirroring AnimeCard's emerald/amber/orange quality signal.
+function ratingColor(r: number): string {
+  if (r >= 8) return "text-emerald-300";
+  if (r >= 7) return "text-amber-300";
+  if (r >= 6) return "text-orange-300";
+  return "text-[var(--text2)]";
 }
 
 export function SimilarRow({ items }: { items: SimilarAnime[] }) {
@@ -24,7 +33,16 @@ export function SimilarRow({ items }: { items: SimilarAnime[] }) {
     el.scrollBy({ left: dir === "right" ? 600 : -600, behavior: "smooth" });
   };
 
-  if (!items.length) return null;
+  // Nicer empty state instead of rendering nothing.
+  if (!items.length) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)]/40 px-4 py-10 text-center">
+        <Sparkles size={20} className="text-[var(--text3)] opacity-60" />
+        <p className="text-sm text-[var(--text2)]">Похожих аниме пока не нашлось</p>
+        <p className="text-xs text-[var(--text3)]">Загляните в каталог — там точно есть что посмотреть</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative group/row">
@@ -50,7 +68,9 @@ export function SimilarRow({ items }: { items: SimilarAnime[] }) {
         className="flex gap-3 overflow-x-auto scrollbar-hide pb-1"
         style={{ scrollSnapType: "x mandatory" }}
       >
-        {items.map(a => (
+        {items.map(a => {
+          const hasRating = typeof a.rating === "number" && a.rating > 0;
+          return (
           <Link
             key={a.id}
             href={`/anime/${a.slug}`}
@@ -79,19 +99,26 @@ export function SimilarRow({ items }: { items: SimilarAnime[] }) {
 
               {/* Play button on hover */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-[transform,opacity] duration-300 ease-out scale-75 group-hover:scale-100">
-                <div className="w-12 h-12 rounded-full bg-violet-600/80 backdrop-blur-sm border-2 border-violet-400/60 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.6)]">
+                <div className="w-12 h-12 rounded-full bg-violet-600/80 backdrop-blur-sm border-2 border-violet-400/60 flex items-center justify-center shadow-[0_4px_16px_rgba(139,92,246,0.5)]">
                   <Play size={18} className="text-white fill-white ml-0.5" />
                 </div>
               </div>
 
-              {/* Badges */}
-              <div className="absolute top-2 left-2 flex flex-col gap-1">
-                {a.isOngoing && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/90 text-white leading-tight">
+              {/* Rating — colour-coded by score, top-left (matches AnimeCard) */}
+              {hasRating && (
+                <div className={`absolute top-2 left-2 flex items-center gap-1 bg-black/70 backdrop-blur-md rounded-md pl-1 pr-1.5 py-0.5 text-[11px] font-bold leading-none tabular-nums ring-1 ring-white/10 ${ratingColor(a.rating!)}`}>
+                  <Star size={10} fill="currentColor" className="shrink-0" /> {a.rating!.toFixed(1)}
+                </div>
+              )}
+
+              {/* Ongoing badge — top-right */}
+              {a.isOngoing && (
+                <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/90 text-white leading-tight shadow-[0_0_8px_rgba(16,185,129,0.5)]">
                     ОНГОИНГ
                   </span>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Episodes bottom */}
               {a.episodes && (
@@ -110,17 +137,18 @@ export function SimilarRow({ items }: { items: SimilarAnime[] }) {
               </h4>
               <div className="flex items-center gap-1.5 flex-wrap">
                 {a.year && (
-                  <span className="text-[11px] text-[var(--text3)]">{a.year}</span>
+                  <span className="text-[11px] text-[var(--text3)] tabular-nums">{a.year}</span>
                 )}
                 {a.genres[0] && (
-                  <span className="text-[10px] text-[var(--text3)] bg-[var(--surface3)] rounded px-1.5 py-0.5">
+                  <span className="text-[10px] text-[var(--text2)] bg-[var(--surface3)] rounded px-1.5 py-0.5">
                     {a.genres[0]}
                   </span>
                 )}
               </div>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

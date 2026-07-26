@@ -1,18 +1,21 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Lock, Check, Loader2, Camera, Trash2, Sparkles } from "lucide-react";
+import { Lock, Check, Loader2, Camera, Trash2, Sparkles, Crown } from "lucide-react";
 import { ProfileFrame, FRAMES, type FrameId } from "@/components/profile/ProfileFrame";
 import { FRAME_UNLOCKS } from "@/lib/level";
-import { ANIME_AVATARS } from "@/lib/anime-avatars";
+import { AVATAR_CATALOG, STATIC_AVATARS, ANIMATED_AVATARS, isAvatarUnlocked, type AvatarDef, type AvatarKind } from "@/lib/anime-avatars";
+import { RARITY, RARITY_ORDER, frameRarity, type Rarity } from "@/lib/rarity";
+import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
 
 interface FrameSelectorProps {
   currentFrame: string;
   currentImage: string | null;
   name: string;
   userLevel: number;
+  isPremium?: boolean;
   isAdmin?: boolean;
 }
 
@@ -42,9 +45,10 @@ function resizeToBase64(file: File): Promise<string> {
   });
 }
 
-export function FrameSelector({ currentFrame, currentImage, name, userLevel, isAdmin = false }: FrameSelectorProps) {
+export function FrameSelector({ currentFrame, currentImage, name, userLevel, isPremium = false, isAdmin = false }: FrameSelectorProps) {
   const { update } = useSession();
   const router = useRouter();
+  const reducedMotion = usePrefersReducedMotion();
 
   const initialFrame = currentFrame in FRAMES ? (currentFrame as FrameId) : "default";
   const [savedFrame, setSavedFrame] = useState<FrameId>(initialFrame);   // last saved to DB
@@ -57,10 +61,27 @@ export function FrameSelector({ currentFrame, currentImage, name, userLevel, isA
   const [uploading, setUploading] = useState(false);
   const [tab, setTab] = useState<"frames"|"anime">("frames");
   const [applyingUrl, setApplyingUrl] = useState<string|null>(null);
+  const [avatarKind, setAvatarKind] = useState<AvatarKind | "all">("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const previewFrame = hovered ?? pendingFrame;
   const hasUnsaved = pendingFrame !== savedFrame;
+  const unlockedCount = FRAME_IDS.filter(f => isAdmin || (FRAME_UNLOCKS[f] ?? 0) <= userLevel).length;
+
+  // Avatars grouped by rarity (filtered by kind), sorted by unlock level.
+  const avatarsByRarity = useMemo(() => {
+    const visible = avatarKind === "all"
+      ? AVATAR_CATALOG
+      : AVATAR_CATALOG.filter(a => a.kind === avatarKind);
+    const map: Record<Rarity, AvatarDef[]> = { legendary: [], epic: [], rare: [], common: [] };
+    for (const a of visible) map[a.rarity].push(a);
+    for (const r of RARITY_ORDER) map[r].sort((x, y) => x.unlockLevel - y.unlockLevel);
+    return map;
+  }, [avatarKind]);
+  const unlockedAvatarCount = useMemo(
+    () => AVATAR_CATALOG.filter(a => isAvatarUnlocked(a, userLevel, isPremium, isAdmin)).length,
+    [userLevel, isPremium, isAdmin]
+  );
 
   function handleSelect(frameId: FrameId) {
     if (saving) return;
@@ -200,9 +221,30 @@ export function FrameSelector({ currentFrame, currentImage, name, userLevel, isA
         )}
       </div>
 
-      {/* Frame name + save feedback */}
-      <div className="flex items-center justify-center gap-2 mb-3 min-h-[18px]">
-        <span className="text-xs font-medium text-[var(--text2)]">{FRAMES[previewFrame].name}</span>
+      {/* Frame name + rarity badge + save feedback */}
+      <div className="flex flex-col items-center gap-1.5 mb-3 min-h-[18px]">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-[var(--text)]">{FRAMES[previewFrame].name}</span>
+          {(() => {
+            const rarity = frameRarity(FRAME_UNLOCKS[previewFrame] ?? 0);
+            const rm = RARITY[rarity];
+            const isLeg = rarity === "legendary";
+            return (
+              <span
+                className={`inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${isLeg ? "rarity-legendary-border" : ""}`}
+                style={{
+                  color: rm.color,
+                  background: `${rm.color}1f`,
+                  border: `1px solid ${rm.color}55`,
+                  boxShadow: isLeg ? `0 0 12px ${rm.glow}` : undefined,
+                }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: rm.color, boxShadow: `0 0 6px ${rm.color}` }} />
+                {rm.label}
+              </span>
+            );
+          })()}
+        </div>
         {saved && !saving && (
           <span className="flex items-center gap-1 text-[11px] text-green-400">
             <Check size={11} /> Сохранено!
@@ -232,7 +274,7 @@ export function FrameSelector({ currentFrame, currentImage, name, userLevel, isA
         <button
           type="button"
           onClick={() => setTab("frames")}
-          className={`flex-1 py-1.5 rounded-lg text-xs font-700 transition-all ${
+          className={`flex-1 py-1.5 rounded-lg text-xs font-700 transition-colors ${
             tab === "frames"
               ? "bg-[var(--surface3)] text-white shadow-sm"
               : "text-[var(--text3)] hover:text-white"
@@ -243,7 +285,7 @@ export function FrameSelector({ currentFrame, currentImage, name, userLevel, isA
         <button
           type="button"
           onClick={openAnimeTab}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-700 transition-all ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-700 transition-colors ${
             tab === "anime"
               ? "bg-violet-600 text-white shadow-sm"
               : "text-[var(--text3)] hover:text-white"
@@ -254,92 +296,222 @@ export function FrameSelector({ currentFrame, currentImage, name, userLevel, isA
       </div>
 
       {tab === "frames" && (
-        <div className="grid grid-cols-4 gap-2 w-full">
-          {FRAME_IDS.map((frameId) => {
-            const required = FRAME_UNLOCKS[frameId] ?? 0;
-            const locked = !isAdmin && required > userLevel;
-            const isPending = frameId === pendingFrame;
-            const isSavedInDB = frameId === savedFrame;
-            return (
-              <button
-                key={frameId}
-                type="button"
-                onClick={() => handleSelect(frameId)}
-                onMouseEnter={() => setHovered(frameId)}
-                onMouseLeave={() => setHovered(null)}
-                disabled={locked}
-                title={locked ? `Откроется на уровне ${required}` : FRAMES[frameId].name}
-                className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-2 transition-[border-color,background-color,box-shadow,opacity] duration-200 ${
-                  isPending
-                    ? "border-violet-500 bg-violet-500/10 shadow-[0_0_14px_rgba(139,92,246,0.3)]"
-                    : locked
-                      ? "border-[var(--border)] bg-[var(--surface2)] opacity-50 cursor-not-allowed"
-                      : "border-[var(--border)] bg-[var(--surface2)] hover:border-violet-500/50 hover:bg-[var(--surface3)] cursor-pointer"
-                }`}
-              >
-                <ProfileFrame image={image} name={name} frame={frameId} size="sm" />
-                <span className="text-[10px] leading-tight text-[var(--text2)] truncate w-full text-center">
-                  {FRAMES[frameId].name}
-                </span>
-                {locked && (
-                  <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 bg-black/70 border border-white/10 rounded-full px-1.5 py-0.5">
-                    <Lock size={9} className="text-yellow-400 flex-shrink-0" />
-                    <span className="text-[9px] font-bold text-yellow-400">{required}</span>
+        <div className="w-full">
+          {/* Header: unlocked counter */}
+          <div className="flex items-center justify-between mb-2 px-0.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text3)]">Коллекция рамок</span>
+            <span className="text-[10px] font-extrabold text-[var(--text2)] tabular-nums">
+              Открыто {unlockedCount}/{FRAME_IDS.length}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2 w-full">
+            {FRAME_IDS.map((frameId) => {
+              const required = FRAME_UNLOCKS[frameId] ?? 0;
+              const locked = !isAdmin && required > userLevel;
+              const isPending = frameId === pendingFrame;
+              const isSavedInDB = frameId === savedFrame;
+              const rarity = frameRarity(required);
+              const rm = RARITY[rarity];
+              const isLeg = rarity === "legendary";
+              const isHovered = hovered === frameId;
+
+              const borderColor = isPending
+                ? rm.color
+                : locked
+                  ? `${rm.color}26`
+                  : isHovered
+                    ? rm.color
+                    : `${rm.color}44`;
+              const boxShadow = isPending
+                ? `0 0 16px ${rm.glow}, inset 0 0 0 1px ${rm.color}`
+                : isHovered && !locked
+                  ? `0 0 16px ${rm.glow}`
+                  : isLeg && !locked
+                    ? `0 0 10px ${rm.glow}`
+                    : undefined;
+
+              return (
+                <button
+                  key={frameId}
+                  type="button"
+                  onClick={() => handleSelect(frameId)}
+                  onMouseEnter={() => setHovered(frameId)}
+                  onMouseLeave={() => setHovered(null)}
+                  disabled={locked}
+                  title={locked ? `Откроется на уровне ${required} · ${rm.label}` : `${FRAMES[frameId].name} · ${rm.label}`}
+                  className={`relative flex flex-col items-center gap-1.5 rounded-xl p-2 transition-[border-color,box-shadow,opacity,transform] duration-200 ${
+                    locked ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:-translate-y-0.5"
+                  } ${isLeg && !locked ? "rarity-legendary-border" : ""}`}
+                  style={{
+                    border: `1.5px solid ${borderColor}`,
+                    background: isPending ? `${rm.color}14` : "var(--surface2)",
+                    boxShadow,
+                  }}
+                >
+                  <div style={{ filter: locked ? "grayscale(0.55)" : undefined, opacity: locked ? 0.65 : 1 }}>
+                    <ProfileFrame image={image} name={name} frame={frameId} size="sm" />
+                  </div>
+                  <span
+                    className="text-[10px] font-semibold leading-tight truncate w-full text-center"
+                    style={{ color: locked ? "var(--text3)" : rm.color }}
+                  >
+                    {FRAMES[frameId].name}
                   </span>
-                )}
-                {!locked && isSavedInDB && (
-                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-green-600 flex items-center justify-center">
-                    <Check size={10} className="text-white" />
-                  </span>
-                )}
-                {!locked && isPending && !isSavedInDB && (
-                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-violet-600 flex items-center justify-center">
-                    <span className="w-2 h-2 rounded-full bg-white" />
-                  </span>
-                )}
-              </button>
-            );
-          })}
+                  {locked && (
+                    <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 bg-black/80 border border-white/10 rounded-full px-1.5 py-0.5 z-10">
+                      <Lock size={9} className="text-yellow-400 flex-shrink-0" />
+                      <span className="text-[9px] font-bold text-yellow-400">{required}</span>
+                    </span>
+                  )}
+                  {!locked && isSavedInDB && (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-green-600 flex items-center justify-center ring-2 ring-[var(--surface)] z-10">
+                      <Check size={10} className="text-white" />
+                    </span>
+                  )}
+                  {!locked && isPending && !isSavedInDB && (
+                    <span
+                      className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-[var(--surface)] z-10"
+                      style={{ background: rm.color }}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-white" />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
       {tab === "anime" && (
         <div className="w-full">
-          <div className="grid grid-cols-4 gap-2 max-h-72 overflow-y-auto">
-            {ANIME_AVATARS.map(a => {
-              const isApplying = applyingUrl === a.url;
-              const isActive = image === a.url;
+          {/* Header: unlocked counter */}
+          <div className="flex items-center justify-between mb-2 px-0.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text3)]">Коллекция аватарок</span>
+            <span className="text-[10px] font-extrabold text-[var(--text2)] tabular-nums">
+              Открыто {unlockedAvatarCount}/{AVATAR_CATALOG.length}
+            </span>
+          </div>
+
+          {/* Kind filter */}
+          <div className="flex w-full mb-3 bg-[var(--surface2)] rounded-xl p-1 gap-1">
+            {([["all","Все"],["static","Статика"],["animated","GIF"]] as const).map(([k, label]) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setAvatarKind(k)}
+                className={`flex-1 py-1.5 rounded-lg text-[11px] font-700 transition-colors ${
+                  avatarKind === k
+                    ? "bg-[var(--surface3)] text-white shadow-sm"
+                    : "text-[var(--text3)] hover:text-white"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Rarity-grouped avatar grid */}
+          <div className="max-h-80 overflow-y-auto flex flex-col gap-3 pr-0.5">
+            {RARITY_ORDER.map((rarity) => {
+              const items = avatarsByRarity[rarity];
+              if (!items.length) return null;
+              const rm = RARITY[rarity];
+              const unlockedInGroup = items.filter(a => isAvatarUnlocked(a, userLevel, isPremium, isAdmin)).length;
               return (
-                <button key={a.id} type="button"
-                  onClick={() => applyAnimeAvatar(a.url)}
-                  disabled={!!applyingUrl}
-                  title={a.name}
-                  className={`relative aspect-square rounded-xl overflow-hidden border transition-all duration-200 hover:scale-105 group ${
-                    isActive
-                      ? "border-violet-500 shadow-[0_0_14px_rgba(139,92,246,0.6)]"
-                      : "border-[var(--border)] hover:border-violet-400/60"
-                  }`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={a.url} alt={a.name} className="w-full h-full object-cover" />
-                  {isApplying && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                      <Loader2 size={16} className="text-white animate-spin" />
-                    </div>
-                  )}
-                  {isActive && (
-                    <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-violet-600 flex items-center justify-center">
-                      <Check size={10} className="text-white" />
+                <div key={rarity}>
+                  {/* Section header */}
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span
+                      className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider"
+                      style={{ color: rm.color, textShadow: `0 0 10px ${rm.color}55` }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: rm.color, boxShadow: `0 0 6px ${rm.color}` }} />
+                      {rm.label}
                     </span>
-                  )}
-                  <p className="absolute bottom-0 inset-x-0 bg-black/70 text-[8px] text-white text-center py-0.5 truncate opacity-0 group-hover:opacity-100 transition-opacity">
-                    {a.name}
-                  </p>
-                </button>
+                    <span className="h-px flex-1" style={{ background: `linear-gradient(90deg, ${rm.color}55, transparent)` }} />
+                    <span className="text-[9px] font-extrabold tabular-nums" style={{ color: rm.color }}>
+                      {unlockedInGroup}/{items.length}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2">
+                    {items.map((a) => {
+                      const unlocked = isAvatarUnlocked(a, userLevel, isPremium, isAdmin);
+                      const isApplying = applyingUrl === a.url;
+                      const isActive = image === a.url;
+                      const isLeg = a.rarity === "legendary";
+                      // Reduced-motion: show the still PNG frame instead of the GIF.
+                      const src = reducedMotion && a.kind === "animated" ? a.still : a.url;
+                      const lockTitle = a.premium
+                        ? `Premium или уровень ${a.unlockLevel} · ${rm.label}`
+                        : `Откроется на уровне ${a.unlockLevel} · ${rm.label}`;
+                      return (
+                        <button
+                          key={a.id}
+                          type="button"
+                          onClick={() => unlocked && applyAnimeAvatar(a.url)}
+                          disabled={!unlocked || !!applyingUrl}
+                          title={unlocked ? `${a.name} · ${rm.label}` : lockTitle}
+                          className={`relative aspect-square rounded-xl overflow-hidden border transition-[transform,border-color,box-shadow,opacity] duration-200 ${
+                            unlocked ? "cursor-pointer hover:-translate-y-0.5" : "cursor-not-allowed opacity-60"
+                          } ${isLeg && unlocked ? "rarity-legendary-border" : ""}`}
+                          style={{
+                            borderColor: isActive ? rm.color : unlocked ? `${rm.color}55` : `${rm.color}22`,
+                            boxShadow: isActive
+                              ? `0 0 14px ${rm.glow}`
+                              : isLeg && unlocked
+                                ? `0 0 10px ${rm.glow}`
+                                : undefined,
+                          }}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={src}
+                            alt={a.name}
+                            loading="lazy"
+                            className="w-full h-full object-cover"
+                            style={{ filter: unlocked ? undefined : "grayscale(0.6)" }}
+                          />
+                          {a.kind === "animated" && (
+                            <span className="absolute bottom-0.5 left-0.5 text-[7px] font-extrabold px-1 py-px rounded bg-black/70 text-white leading-none tracking-wider">
+                              GIF
+                            </span>
+                          )}
+                          {isApplying && (
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                              <Loader2 size={16} className="text-white animate-spin" />
+                            </div>
+                          )}
+                          {isActive && !isApplying && (
+                            <span
+                              className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-[var(--surface)]"
+                              style={{ background: rm.color }}
+                            >
+                              <Check size={9} className="text-white" />
+                            </span>
+                          )}
+                          {!unlocked && (
+                            <span className="absolute top-0.5 right-0.5 flex items-center gap-0.5 bg-black/80 border border-white/10 rounded-full px-1 py-0.5">
+                              {a.premium ? <Crown size={8} className="text-yellow-400" /> : <Lock size={8} className="text-yellow-400" />}
+                              <span className="text-[8px] font-bold text-yellow-400 tabular-nums">{a.unlockLevel}</span>
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </div>
-          <p className="text-[10px] text-[var(--text3)] text-center mt-2">24 аниме аватарки</p>
+
+          <p className="text-[10px] text-[var(--text3)] text-center mt-2">
+            {reducedMotion
+              ? "Анимация отключена — GIF показаны стоп-кадром"
+              : `${AVATAR_CATALOG.length} аватарок · ${STATIC_AVATARS.length} статичных + ${ANIMATED_AVATARS.length} GIF`}
+          </p>
         </div>
       )}
 

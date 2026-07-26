@@ -97,7 +97,7 @@ export default function SyncPage() {
           <button
             onClick={() => startSync("new")}
             disabled={syncing}
-            className="w-full flex items-center justify-center gap-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 text-green-400 font-semibold py-3 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 text-green-400 font-semibold py-3 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {syncing && mode === "new"
               ? <Loader2 size={16} className="animate-spin" />
@@ -124,7 +124,7 @@ export default function SyncPage() {
           <button
             onClick={() => startSync("all")}
             disabled={syncing}
-            className="w-full flex items-center justify-center gap-2 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 hover:border-violet-500/40 text-violet-400 font-semibold py-3 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 hover:border-violet-500/40 text-violet-400 font-semibold py-3 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {syncing && mode === "all"
               ? <Loader2 size={16} className="animate-spin" />
@@ -147,7 +147,7 @@ export default function SyncPage() {
             <>
               <div className="w-full bg-[var(--surface2)] rounded-full h-2 mb-2">
                 <div
-                  className="bg-violet-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-violet-500 h-2 rounded-full transition-[width] duration-300"
                   style={{ width: `${pct}%` }}
                 />
               </div>

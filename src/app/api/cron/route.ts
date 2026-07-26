@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getTrending, getSchedule, animeSlug, type AnilibriaAnime } from "@/lib/anilibria";
+import { awardHeroOfWeek } from "@/lib/leaderboard";
 
 // Protect cron with secret key from .env
 const CRON_SECRET = process.env.CRON_SECRET;
@@ -57,6 +58,14 @@ export async function GET(req: NextRequest) {
       } catch (e) {
         errors.push(`anime ${a.id}: ${(e as Error).message}`);
       }
+    }
+
+    // Award «Герой недели» to the just-closed week's #1 (idempotent).
+    try {
+      const hero = await awardHeroOfWeek();
+      results.push(hero.awarded ? `hero-of-week — ${hero.userId}` : "hero-of-week — none");
+    } catch (e) {
+      errors.push(`hero-of-week: ${(e as Error).message}`);
     }
 
     return NextResponse.json({

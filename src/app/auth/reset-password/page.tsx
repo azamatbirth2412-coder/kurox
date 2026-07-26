@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react";
+import Image from "next/image";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -53,7 +54,7 @@ function ResetPasswordForm() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <img src="/logo.png" alt="Kurox" width={40} height={40} className="rounded-xl" />
+            <Image src="/logo.png" alt="Kurox" width={40} height={40} className="rounded-xl" />
             <span className="text-2xl font-black text-[#c4b5fd]">KUROX</span>
           </Link>
           <h1 className="text-xl font-bold mt-2">Новый пароль</h1>

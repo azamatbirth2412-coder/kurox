@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { AVATAR_BY_URL, isAvatarUnlocked } from "@/lib/anime-avatars";
+import { calcLevel } from "@/lib/level";
 
 // Serves the current user's avatar as an image. The avatar (base64 data URI) is
 // stored only in the DB — never in the JWT cookie — so the client fetches it here.
@@ -62,6 +64,27 @@ export async function POST(req: NextRequest) {
   if (localPath) {
     if (!/^\/avatars\/avatar_\d{2}a?\.(png|gif)$/.test(localPath)) {
       return NextResponse.json({ error: "Invalid path" }, { status: 400 });
+    }
+    // Enforce the avatar's unlock rule (level / premium), mirroring frame gating.
+    // Legacy paths not present in the catalog are allowed for backward compatibility.
+    const def = AVATAR_BY_URL[localPath];
+    if (def) {
+      const u = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { xp: true, isPremium: true, role: true },
+      });
+      if (!u) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      const unlocked = isAvatarUnlocked(def, calcLevel(u.xp), u.isPremium, u.role === "ADMIN");
+      if (!unlocked) {
+        return NextResponse.json(
+          {
+            error: def.premium
+              ? `Аватарка откроется на уровне ${def.unlockLevel} или с Premium`
+              : `Аватарка откроется на уровне ${def.unlockLevel}`,
+          },
+          { status: 403 }
+        );
+      }
     }
     await prisma.user.update({ where: { id: session.user.id }, data: { image: localPath } });
     return NextResponse.json({ ok: true, image: localPath });

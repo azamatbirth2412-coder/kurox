@@ -36,7 +36,7 @@ export default function GenresPage() {
           <Link
             key={genre.slug}
             href={`/genre/${encodeURIComponent(genre.slug)}`}
-            className="bg-gray-900 hover:bg-purple-900/30 border border-gray-800 hover:border-purple-700 rounded-xl p-4 transition-all group"
+            className="bg-gray-900 hover:bg-purple-900/30 border border-gray-800 hover:border-purple-700 rounded-xl p-4 transition-colors group"
           >
             <div className="font-semibold group-hover:text-purple-400 transition-colors">{genre.name}</div>
             <div className="text-sm text-gray-500 mt-1">{genre.count} тайтлов</div>

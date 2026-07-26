@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Play, Flame } from "lucide-react";
@@ -28,16 +28,23 @@ export function HeroBannerSlider({ items }: Props) {
   const [prev, setPrev] = useState<number | null>(null);
   const [transitioning, setTransitioning] = useState(false);
 
+  const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const goTo = useCallback((next: number) => {
     if (transitioning || next === idx) return;
     setPrev(idx);
     setTransitioning(true);
-    setTimeout(() => {
+    if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
+    transitionTimerRef.current = setTimeout(() => {
       setIdx(next);
       setPrev(null);
       setTransitioning(false);
     }, 600);
   }, [idx, transitioning]);
+
+  useEffect(() => {
+    return () => { if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current); };
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -89,7 +96,7 @@ export function HeroBannerSlider({ items }: Props) {
             <div className="flex items-center gap-2 mb-3 flex-wrap">
               <span className="badge badge-purple text-xs"><Flame size={10} /> Новинка</span>
               {current.type && <span className="badge badge-gray text-xs">{current.type}</span>}
-              {current.year && <span className="badge badge-gray text-xs">{current.year}</span>}
+              {current.year && <span className="badge badge-gray text-xs tabular-nums">{current.year}</span>}
               {current.isOngoing && <span className="badge badge-green text-xs">● Онгоинг</span>}
             </div>
 
@@ -114,11 +121,11 @@ export function HeroBannerSlider({ items }: Props) {
 
             <div className="flex gap-3 flex-wrap items-center">
               <Link href={`/anime/${current.slug}`}
-                className="flex items-center gap-2 bg-[var(--accent)] hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-lg shadow-violet-900/40 neon-glow">
+                className="flex items-center gap-2 bg-[var(--accent)] hover:bg-violet-500 active:scale-[.97] text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-[transform,background-color] duration-200 neon-glow">
                 <Play size={15} fill="currentColor" /> Смотреть
               </Link>
               <Link href="/anime"
-                className="flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors border border-white/10">
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/15 active:scale-[.97] text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-[transform,background-color] duration-200 border border-white/10">
                 Каталог
               </Link>
             </div>
@@ -142,6 +149,38 @@ export function HeroBannerSlider({ items }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Slide indicators — active pill fills over the auto-advance interval */}
+      {items.length > 1 && (
+        <div className="absolute bottom-4 left-0 right-0 z-20 flex justify-center gap-2 px-4">
+          {items.map((_, i) => {
+            const active = i === idx;
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => goTo(i)}
+                aria-label={`Показать слайд ${i + 1} из ${items.length}`}
+                aria-current={active}
+                className="grid h-9 place-items-center px-1"
+              >
+                <span
+                  className="relative block h-1.5 overflow-hidden rounded-full transition-[width,background-color] duration-300 ease-out"
+                  style={{ width: active ? 34 : 12, background: "rgba(255,255,255,.28)" }}
+                >
+                  {active && (
+                    <span
+                      key={idx}
+                      className="absolute inset-0 origin-left rounded-full bg-[var(--accent)]"
+                      style={{ animation: `heroProgress ${INTERVAL}ms linear forwards` }}
+                    />
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

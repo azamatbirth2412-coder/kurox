@@ -466,7 +466,7 @@ export function AdManagement({ initialSlots }: { initialSlots: AdSlotData[] }) {
 
                   {slot.banners.length < 5 && (
                     <button onClick={() => addBanner(slotMeta.id)}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm border border-dashed border-violet-500/30 text-violet-400 hover:border-violet-500 hover:bg-violet-500/5 transition-all w-full justify-center">
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm border border-dashed border-violet-500/30 text-violet-400 hover:border-violet-500 hover:bg-violet-500/5 transition-colors w-full justify-center">
                       <Plus size={14} /> Добавить ещё баннер (авто-смена)
                     </button>
                   )}
@@ -492,7 +492,7 @@ export function AdManagement({ initialSlots }: { initialSlots: AdSlotData[] }) {
                         onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(slotMeta.id, f, "video"); }} />
                       <button onClick={() => fileRefs.current[`video-${slotMeta.id}`]?.click()}
                         disabled={uploading === slotMeta.id}
-                        className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm border border-violet-500/40 text-violet-400 hover:bg-violet-500/10 transition-all disabled:opacity-50 whitespace-nowrap">
+                        className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm border border-violet-500/40 text-violet-400 hover:bg-violet-500/10 transition-colors disabled:opacity-50 whitespace-nowrap">
                         {uploading === slotMeta.id ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
                         С компа
                       </button>

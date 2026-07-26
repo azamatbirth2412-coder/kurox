@@ -1,7 +1,8 @@
+// Colours mirror the shared rarity tokens in globals.css (--rarity-*).
 const RARITY_META: Record<string, { label: string; color: string; glow: string }> = {
-  common:    { label: "Обычный",    color: "#64748b", glow: "none" },
+  common:    { label: "Обычный",    color: "#9ca3af", glow: "none" },
   rare:      { label: "Редкий",     color: "#3b82f6", glow: "0 0 10px rgba(59,130,246,0.45)" },
-  epic:      { label: "Эпический",  color: "#8b5cf6", glow: "0 0 14px rgba(139,92,246,0.55)" },
+  epic:      { label: "Эпический",  color: "#a855f7", glow: "0 0 14px rgba(168,85,247,0.55)" },
   legendary: { label: "Легендарный",color: "#f59e0b", glow: "0 0 18px rgba(245,158,11,0.6)" },
 };
 

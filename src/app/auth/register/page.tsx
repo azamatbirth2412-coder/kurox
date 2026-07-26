@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -46,7 +47,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <img src="/logo.png" alt="Kurox" width={40} height={40} className="rounded-xl" />
+            <Image src="/logo.png" alt="Kurox" width={40} height={40} className="rounded-xl" />
             <span className="text-2xl font-black text-[#c4b5fd]">KUROX</span>
           </Link>
           <h1 className="text-xl font-bold mt-2">Создать аккаунт</h1>

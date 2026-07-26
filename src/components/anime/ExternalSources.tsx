@@ -210,7 +210,7 @@ export function ExternalSources({ title, sourceFilter }: Props) {
             <div className="flex gap-1.5 flex-wrap max-h-[100px] overflow-y-auto">
               {episodes.map(ep => (
                 <button key={ep.num} onClick={() => playEp(ep)}
-                  className={`w-10 h-10 rounded-lg text-sm font-bold transition-all flex-shrink-0 ${
+                  className={`w-10 h-10 rounded-lg text-sm font-bold transition-[background-color,color,box-shadow] flex-shrink-0 ${
                     currentEp?.num === ep.num
                       ? "bg-violet-600 text-white shadow-lg shadow-violet-900/40"
                       : "bg-[var(--surface2)] text-[var(--text2)] hover:bg-violet-600/20 hover:text-violet-300"

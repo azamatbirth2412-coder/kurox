@@ -3,13 +3,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Hls from "hls.js";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
-  ChevronLeft, ChevronRight, Loader2, AlertCircle, Settings, SkipForward, Zap, Download
+  ChevronLeft, ChevronRight, Loader2, AlertCircle, Settings, SkipForward, Zap
 } from "lucide-react";
 
 function useUserXp() {
   const [data, setData] = useState<{ xp: number; level: number } | null>(null);
   useEffect(() => {
-    fetch("/api/me/stats").then(r => r.ok ? r.json() : null).then(d => { if (d?.xp != null) setData(d); }).catch(() => {});
+    fetch("/api/user/stats").then(r => r.ok ? r.json() : null).then(d => { if (d?.xp != null) setData(d); }).catch(() => {});
   }, []);
   return data;
 }
@@ -46,61 +46,6 @@ function proxyUrl(path: string | null): string | null {
   return `/api/proxy/hls?url=${encodeURIComponent(abs)}`;
 }
 
-function DownloadMenu({ ep, show, onToggle, animeTitle }: {
-  ep: Episode;
-  show: boolean;
-  onToggle: () => void;
-  animeTitle: string;
-}) {
-  const qualities = (["hls_1080", "hls_720", "hls_480"] as Quality[]).filter(q => ep[q]);
-
-  function dlHref(q: Quality) {
-    const raw = ep[q]!;
-    const absUrl = raw.startsWith("http") ? raw : CDN + raw;
-    const label = q.replace("hls_", "") + "p";
-    const safe = animeTitle.replace(/[\\/:*?"<>|]/g, "").trim().slice(0, 60);
-    const name = `${safe} - Серия ${ep.ordinal} [${label}].ts`;
-    return `/api/download/episode?url=${encodeURIComponent(absUrl)}&name=${encodeURIComponent(name)}`;
-  }
-
-  return (
-    <div className="relative">
-      <button
-        onClick={e => { e.stopPropagation(); onToggle(); }}
-        title="Скачать эпизод"
-        className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-      >
-        <Download size={14} />
-      </button>
-      {show && (
-        <div
-          className="absolute bottom-10 right-0 bg-[#13131f] border border-white/10 rounded-xl shadow-2xl z-50 w-[190px] overflow-hidden"
-          onClick={e => e.stopPropagation()}
-        >
-          <div className="px-3 pt-3 pb-2 border-b border-white/8">
-            <p className="text-white text-xs font-semibold">Скачать серию {ep.ordinal}</p>
-            <p className="text-white/35 text-[10px] mt-0.5">Выбери качество</p>
-          </div>
-          <div className="p-2 space-y-1">
-            {qualities.map(q => (
-              <a
-                key={q}
-                href={dlHref(q)}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => onToggle()}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-white/70 hover:bg-violet-600/20 hover:text-white transition-colors"
-              >
-                <Download size={13} className="text-violet-400 flex-shrink-0" />
-                {q.replace("hls_", "")}p
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 function masterUrl(ep: Episode | null): string | null {
   if (!ep) return null;
@@ -140,7 +85,6 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
   const [fullscreen, setFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-  const [showDownload, setShowDownload] = useState(false);
   const [buffered, setBuffered] = useState(0);
   const [introSkipped, setIntroSkipped] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -152,6 +96,14 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resumeTimeRef = useRef<number>(0);
   const touchStartX  = useRef<number>(0);
+  // Episodes already persisted to the DB this session — prevents the timeupdate
+  // handler (fires several times a second) from re-POSTing /api/watch-history.
+  const persistedRef = useRef<Set<string>>(new Set());
+  // Always reflects the latest currentEp — prevents stale closures in video event handlers
+  const currentEpRef = useRef(currentEp);
+
+  // Keep ref in sync with state so event handlers always see the latest episode
+  currentEpRef.current = currentEp;
 
   const currentIdx = sorted.findIndex(e => e.id === currentEp?.id);
   const prevEp = currentIdx > 0 ? sorted[currentIdx - 1] : null;
@@ -168,6 +120,12 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
   }, [animeId]);
 
   function markWatched(ep: Episode) {
+    // Run once per episode per mount. onTimeUpdate fires ~4×/sec, so without this
+    // guard the last 15% of every episode would fire dozens of identical
+    // /api/watch-history POSTs (each doing several DB queries).
+    if (persistedRef.current.has(ep.id)) return;
+    persistedRef.current.add(ep.id);
+
     setWatchedEps(prev => {
       if (prev.has(ep.id)) return prev;
       const next = new Set(prev);
@@ -275,11 +233,12 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
     const onTimeUpdate  = () => {
       setCurrentTime(video.currentTime);
       if (video.buffered.length > 0) setBuffered(video.buffered.end(video.buffered.length - 1));
-      if (currentEp && video.duration > 0 && video.currentTime / video.duration > 0.85) markWatched(currentEp);
+      const ep = currentEpRef.current;
+      if (ep && video.duration > 0 && video.currentTime / video.duration > 0.85) markWatched(ep);
     };
     const onDuration    = () => setDuration(video.duration);
     const onVolumeChange = () => { setVolume(video.volume); setMuted(video.muted); };
-    const onEnded       = () => { setPlaying(false); if (currentEp) markWatched(currentEp); if (nextEp) selectEp(nextEp); };
+    const onEnded       = () => { setPlaying(false); const ep = currentEpRef.current; if (ep) markWatched(ep); if (nextEp) selectEp(nextEp); };
     video.addEventListener("play", onPlay);
     video.addEventListener("pause", onPause);
     video.addEventListener("waiting", onWaiting);
@@ -305,6 +264,10 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
     const onChange = () => setFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onChange);
     return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  useEffect(() => {
+    return () => { if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current); };
   }, []);
 
   useEffect(() => {
@@ -364,6 +327,7 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
       el?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
     }, 50);
   }
+
 
   if (!sorted.length) return (
     <div className="aspect-video rounded-xl bg-[var(--surface)] flex flex-col items-center justify-center gap-3 text-[var(--text2)]">
@@ -532,7 +496,7 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
           </div>
 
           {/* Spacer */}
-          <div className="flex-1" onClick={() => { togglePlay(); setShowDownload(false); setShowSettings(false); }} style={{ cursor: "pointer" }} />
+          <div className="flex-1" onClick={() => { togglePlay(); setShowSettings(false); }} style={{ cursor: "pointer" }} />
 
           {/* Bottom controls */}
           <div className="px-3 pb-3 pt-10 bg-gradient-to-t from-black/85 via-black/40 to-transparent">
@@ -584,20 +548,10 @@ export function EpisodePlayer({ animeId, episodes, title, poster, slug }: Props)
 
               <div className="flex-1" />
 
-              {/* Download */}
-              {currentEp && (currentEp.hls_480 || currentEp.hls_720 || currentEp.hls_1080) && (
-                <DownloadMenu
-                  ep={currentEp}
-                  show={showDownload}
-                  onToggle={() => { setShowDownload(s => !s); setShowSettings(false); }}
-                  animeTitle={title}
-                />
-              )}
-
               {/* Quality / Settings */}
               <div className="relative">
                 <button
-                  onClick={() => { setShowSettings(s => !s); setShowDownload(false); }}
+                  onClick={() => setShowSettings(s => !s)}
                   className="flex items-center gap-1 text-white/60 hover:text-white text-xs font-medium px-2 py-1 rounded-md hover:bg-white/10 transition-colors"
                 >
                   {quality === "auto"

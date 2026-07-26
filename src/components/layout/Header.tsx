@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
 import {
   Search, Menu, X, User, LogOut, Settings,
-  ChevronDown, Shuffle, Tv, Film, Sparkles, Loader2, Zap, TrendingUp, Calendar, Trophy, Play,
+  ChevronDown, Shuffle, Tv, Film, Sparkles, Loader2, Zap, TrendingUp, Calendar, Trophy, Play, Target,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
@@ -25,7 +25,7 @@ interface SearchResult {
 const CATALOG_LINKS = [
   { label: "Свежие серии",  href: "/anime?sort=trending",  icon: Zap,         desc: "Новые серии сегодня" },
   { label: "Онгоинги",      href: "/anime?sort=ongoing",   icon: Tv,          desc: "Выходят прямо сейчас" },
-  { label: "Топ аниме",     href: "/anime?sort=popular",   icon: TrendingUp,  desc: "Лучшие всех времён" },
+  { label: "Топ аниме",     href: "/top",                  icon: TrendingUp,  desc: "Рейтинг лучших тайтлов" },
   { label: "Расписание",    href: "/schedule",             icon: Calendar,    desc: "Когда выйдет новая серия" },
 ];
 
@@ -45,6 +45,13 @@ export function Header() {
     const handler = (e: Event) => setHeaderFrame((e as CustomEvent<string>).detail);
     window.addEventListener("profileFrameChange", handler);
     return () => window.removeEventListener("profileFrameChange", handler);
+  }, []);
+  // Claiming a daily quest awards XP — invalidate the cached header stats so the
+  // level/XP pill refetches fresh values the next time the user menu opens.
+  useEffect(() => {
+    const handler = () => { statsFetched.current = false; setUserStats(null); };
+    window.addEventListener("questClaimed", handler);
+    return () => window.removeEventListener("questClaimed", handler);
   }, []);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -253,9 +260,19 @@ export function Header() {
               )}
             </div>
 
+            <Link href="/top"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-[var(--text2)] hover:text-white hover:bg-white/5 transition-colors">
+              <TrendingUp size={14} /> Топ аниме
+            </Link>
+
             <Link href="/leaderboard"
               className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-[var(--text2)] hover:text-white hover:bg-white/5 transition-colors">
               <Trophy size={14} /> Лидерборд
+            </Link>
+
+            <Link href="/quests"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-[var(--text2)] hover:text-white hover:bg-white/5 transition-colors">
+              <Target size={14} /> Дейлики
             </Link>
 
             <Link href="/schedule"
@@ -500,6 +517,15 @@ export function Header() {
             </Link>
             <Link href="/anime?sort=trending" className="flex items-center gap-2 py-2.5 text-sm font-medium text-[var(--text2)] hover:text-white transition-colors">
               Тренды
+            </Link>
+            <Link href="/top" className="flex items-center gap-2 py-2.5 text-sm font-medium text-[var(--text2)] hover:text-white transition-colors">
+              <TrendingUp size={15} /> Топ аниме
+            </Link>
+            <Link href="/leaderboard" className="flex items-center gap-2 py-2.5 text-sm font-medium text-[var(--text2)] hover:text-white transition-colors">
+              <Trophy size={15} /> Лидерборд
+            </Link>
+            <Link href="/quests" className="flex items-center gap-2 py-2.5 text-sm font-medium text-[var(--text2)] hover:text-white transition-colors">
+              <Target size={15} /> Дейлики
             </Link>
             <Link href="/schedule" className="flex items-center gap-2 py-2.5 text-sm font-medium text-[var(--text2)] hover:text-white transition-colors">
               <Sparkles size={15} /> Расписание

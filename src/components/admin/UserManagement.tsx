@@ -91,7 +91,7 @@ export function UserManagement({ initialUsers }: { initialUsers: User[] }) {
             />
             <div className="flex gap-2 justify-end">
               <button onClick={() => setBanModal(null)} className="px-4 py-2 text-sm text-[var(--text2)] hover:text-white transition-colors">Отмена</button>
-              <button onClick={confirmBan} className="px-4 py-2 text-sm font-semibold bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 rounded-xl transition-all">
+              <button onClick={confirmBan} className="px-4 py-2 text-sm font-semibold bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 rounded-xl transition-colors">
                 Заблокировать
               </button>
             </div>
@@ -147,7 +147,7 @@ export function UserManagement({ initialUsers }: { initialUsers: User[] }) {
                     onClick={() => setBanModal({ userId: u.id, name: u.name || u.email })}
                     disabled={!!busy}
                     title="Заблокировать"
-                    className="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/25 text-red-400 flex items-center justify-center transition-all disabled:opacity-40"
+                    className="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/25 text-red-400 flex items-center justify-center transition-colors disabled:opacity-40"
                   >
                     {busy && loading === u.id + "ban" ? <Loader2 size={13} className="animate-spin" /> : <Ban size={13} />}
                   </button>
@@ -157,7 +157,7 @@ export function UserManagement({ initialUsers }: { initialUsers: User[] }) {
                     onClick={() => doAction(u.id, "unban")}
                     disabled={!!busy}
                     title="Разблокировать"
-                    className="w-8 h-8 rounded-lg bg-green-500/10 hover:bg-green-500/25 text-green-400 flex items-center justify-center transition-all disabled:opacity-40"
+                    className="w-8 h-8 rounded-lg bg-green-500/10 hover:bg-green-500/25 text-green-400 flex items-center justify-center transition-colors disabled:opacity-40"
                   >
                     {busy ? <Loader2 size={13} className="animate-spin" /> : <UserCheck size={13} />}
                   </button>
@@ -167,7 +167,7 @@ export function UserManagement({ initialUsers }: { initialUsers: User[] }) {
                     onClick={() => doAction(u.id, "makeAdmin")}
                     disabled={!!busy}
                     title="Сделать админом"
-                    className="w-8 h-8 rounded-lg bg-purple-500/10 hover:bg-purple-500/25 text-purple-400 flex items-center justify-center transition-all disabled:opacity-40"
+                    className="w-8 h-8 rounded-lg bg-purple-500/10 hover:bg-purple-500/25 text-purple-400 flex items-center justify-center transition-colors disabled:opacity-40"
                   >
                     {busy ? <Loader2 size={13} className="animate-spin" /> : <Shield size={13} />}
                   </button>
@@ -177,7 +177,7 @@ export function UserManagement({ initialUsers }: { initialUsers: User[] }) {
                     onClick={() => doAction(u.id, "removeAdmin")}
                     disabled={!!busy}
                     title="Снять права админа"
-                    className="w-8 h-8 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/25 text-yellow-400 flex items-center justify-center transition-all disabled:opacity-40"
+                    className="w-8 h-8 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/25 text-yellow-400 flex items-center justify-center transition-colors disabled:opacity-40"
                   >
                     {busy ? <Loader2 size={13} className="animate-spin" /> : <ShieldOff size={13} />}
                   </button>
@@ -186,7 +186,7 @@ export function UserManagement({ initialUsers }: { initialUsers: User[] }) {
                   onClick={() => doAction(u.id, u.hasSecretAgent ? "revokeTitle" : "grantTitle", "secret_agent")}
                   disabled={!!busy}
                   title={u.hasSecretAgent ? "Отозвать ТАЙНЫЙ АГЕНТ" : "Выдать ТАЙНЫЙ АГЕНТ"}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-40 ${
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 ${
                     u.hasSecretAgent
                       ? "bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30"
                       : "bg-[var(--surface2)] text-[var(--text3)] hover:bg-cyan-500/10 hover:text-cyan-400"
@@ -203,7 +203,7 @@ export function UserManagement({ initialUsers }: { initialUsers: User[] }) {
                   }}
                   disabled={!!busy}
                   title="Удалить"
-                  className="w-8 h-8 rounded-lg bg-[var(--surface2)] hover:bg-red-500/20 text-[var(--text3)] hover:text-red-400 flex items-center justify-center transition-all disabled:opacity-40"
+                  className="w-8 h-8 rounded-lg bg-[var(--surface2)] hover:bg-red-500/20 text-[var(--text3)] hover:text-red-400 flex items-center justify-center transition-colors disabled:opacity-40"
                 >
                   {busy ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
                 </button>

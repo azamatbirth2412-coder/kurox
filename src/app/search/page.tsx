@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
-import { searchAnilibria, animePoster, animeSlug, animeTitle, animeYear, animeEpisodes, type AnilibriaAnime } from "@/lib/anilibria";
+import { searchAnilibria, animePoster, animeSlug, animeTitle, animeYear, animeEpisodes, animeRating, animeVotes, type AnilibriaAnime } from "@/lib/anilibria";
 import { AnimeCard } from "@/components/anime/AnimeCard";
 import { Search } from "lucide-react";
 
@@ -84,7 +84,8 @@ export default async function SearchPage({ searchParams }: PageProps) {
                   year={animeYear(a)}
                   format={a.type?.description}
                   status={a.is_ongoing ? "RELEASING" : "FINISHED"}
-                  rating={null}
+                  rating={animeRating(a)}
+                  votes={animeVotes(a)}
                   episodes={animeEpisodes(a)}
                   genres={a.genres?.slice(0, 2).map(g => g.name)}
                   isNew={a.is_ongoing}

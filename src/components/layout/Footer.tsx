@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { GENRES } from "@/lib/anilibria";
 
 const NAV_LINKS = [
@@ -28,7 +29,7 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4 group w-fit">
-              <img src="/logo.png" alt="Kurox" width={36} height={36} className="rounded-xl shadow-lg shadow-violet-900/40 group-hover:shadow-violet-500/50 transition-shadow" />
+              <Image src="/logo.png" alt="Kurox" width={36} height={36} className="rounded-xl shadow-lg shadow-violet-900/40 group-hover:shadow-violet-500/50 transition-shadow" />
               <span className="text-xl font-black text-[#c4b5fd]">KUROX</span>
             </Link>
             <p className="text-sm text-[var(--text3)] leading-relaxed max-w-[220px]">
@@ -41,9 +42,11 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="block rounded-xl overflow-hidden border border-[var(--border)] hover:border-violet-500/50 transition-[border-color,box-shadow] duration-200 hover:shadow-lg hover:shadow-violet-900/20 w-full max-w-[220px]"
               >
-                <img
+                <Image
                   src="/uploads/tg-banner-final.png"
                   alt="Наш Telegram — KuroXanime"
+                  width={220}
+                  height={80}
                   className="w-full h-auto block"
                 />
               </a>
@@ -56,7 +59,7 @@ export function Footer() {
             <ul className="space-y-2.5">
               {NAV_LINKS.map(({ href, label }) => (
                 <li key={href}>
-                  <Link href={href} className="text-sm text-[var(--text2)] hover:text-white transition-colors">
+                  <Link href={href} className="inline-block text-sm text-[var(--text2)] hover:text-white hover:translate-x-0.5 transition-[color,transform] duration-200">
                     {label}
                   </Link>
                 </li>
@@ -70,7 +73,7 @@ export function Footer() {
             <ul className="space-y-2.5">
               {SHOW_GENRES.map(g => (
                 <li key={g}>
-                  <Link href={`/anime?genre=${encodeURIComponent(g)}`} className="text-sm text-[var(--text2)] hover:text-white transition-colors">
+                  <Link href={`/anime?genre=${encodeURIComponent(g)}`} className="inline-block text-sm text-[var(--text2)] hover:text-white hover:translate-x-0.5 transition-[color,transform] duration-200">
                     {g}
                   </Link>
                 </li>
@@ -84,7 +87,7 @@ export function Footer() {
             <ul className="space-y-2.5">
               {INFO_LINKS.map(({ href, label }) => (
                 <li key={href}>
-                  <Link href={href} className="text-sm text-[var(--text2)] hover:text-white transition-colors">
+                  <Link href={href} className="inline-block text-sm text-[var(--text2)] hover:text-white hover:translate-x-0.5 transition-[color,transform] duration-200">
                     {label}
                   </Link>
                 </li>
@@ -108,7 +111,7 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="pt-5 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[var(--text3)]">
-          <p>© {new Date().getFullYear()} Kurox. Все права защищены.</p>
+          <p className="tabular-nums">© {new Date().getFullYear()} Kurox. Все права защищены.</p>
           <p className="text-center sm:text-right">
             Данные предоставлены{" "}
             <span className="text-[var(--text2)]">Anilibria</span>

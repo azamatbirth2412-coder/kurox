@@ -37,9 +37,17 @@ export interface AnilibriaAnime {
   genres: { id: number; name: string }[];
   description: string | null;
   is_ongoing: boolean;
+  is_in_production?: boolean;
   episodes_total: number | null;
   average_duration_of_episode: number | null;
   added_in_users_favorites: number;
+  // User-collection counts — the API exposes no numeric score, so these
+  // engagement signals are the basis for the derived audience rating below.
+  added_in_watched_collection?: number | null;
+  added_in_watching_collection?: number | null;
+  added_in_planned_collection?: number | null;
+  added_in_postponed_collection?: number | null;
+  added_in_abandoned_collection?: number | null;
   fresh_at: string | null;
   publish_day?: { value: number; description: string } | null; // 1=Пн … 7=Вс
   // Only on full release page
@@ -137,6 +145,41 @@ export function animeEpisodesAired(a: AnilibriaAnime): number | null {
 export function animeStatus(a: AnilibriaAnime): string {
   if (a.is_ongoing) return "RELEASING";
   return "FINISHED";
+}
+
+// ── Derived audience rating ────────────────────────────────────────────────
+// The Anilibria API exposes NO numeric quality score (only the RATING_DESC sort
+// and per-user collection counts). We derive a believable 0–10 audience score
+// from the completion-vs-drop ratio: viewers who finished or are actively
+// watching a title (positive signal) versus those who dropped it (negative).
+// A minimum sample is required so obscure/brand-new titles show no badge rather
+// than a fabricated one. The meaningful 0.80–1.00 satisfaction band is mapped
+// onto a 5.0–9.5 range so scores spread realistically instead of clumping at 10.
+export function animeRating(a: AnilibriaAnime): number | null {
+  const watched  = a.added_in_watched_collection  ?? 0;
+  const watching = a.added_in_watching_collection ?? 0;
+  const dropped  = a.added_in_abandoned_collection ?? 0;
+  const positive = watched + watching;
+  const n = positive + dropped;
+  if (n < 60) return null; // too little signal — hide the badge
+  const satisfaction = positive / n; // ~0.80–1.00 in practice
+  const score = 5 + ((satisfaction - 0.8) / 0.2) * 4.5;
+  return Math.round(Math.min(9.5, Math.max(5, score)) * 10) / 10;
+}
+
+// ── Vote / engagement count ────────────────────────────────────────────────
+// The number of viewers who actually formed an opinion on a title — exactly the
+// population animeRating() derives its score from (finished + still watching +
+// dropped). This is the closest thing the API offers to a "vote count", shown
+// next to the score as a confidence signal (animeon.fun renders "8.6 · 175 522").
+// Planned/postponed collections are excluded: those users have not watched it,
+// so they cast no vote. Whenever a rating badge shows (n ≥ 60) this is ≥ 60, so
+// pairing the two never surfaces a misleadingly tiny number.
+export function animeVotes(a: AnilibriaAnime): number {
+  const watched  = a.added_in_watched_collection  ?? 0;
+  const watching = a.added_in_watching_collection ?? 0;
+  const dropped  = a.added_in_abandoned_collection ?? 0;
+  return watched + watching + dropped;
 }
 
 /* ── Public API ── */
@@ -324,6 +367,91 @@ export async function getByGenrePage(genre: string, page = 0, limit = 48): Promi
   const d = await apiFetch<PagedResponse>(
     `/anime/catalog/releases?limit=${limit}&page=${p}&f%5Bgenres%5D%5B%5D=${id}&${SORT_FRESH}`
   );
+  const total = d?.meta?.pagination?.total ?? 0;
+  return { data: d?.data ?? [], total, totalPages: Math.ceil(total / limit) };
+}
+
+// ── Combined catalog filter (status + type + genre + year + sort) ───────────
+export type CatalogStatus = "ongoing" | "finished" | "announce";
+export type CatalogSort = "fresh" | "rating";
+
+// Release types the Anilibria catalog accepts, with Russian labels for the UI.
+export const RELEASE_TYPES: { value: string; label: string }[] = [
+  { value: "TV",      label: "ТВ" },
+  { value: "MOVIE",   label: "Фильм" },
+  { value: "OVA",     label: "OVA" },
+  { value: "ONA",     label: "ONA" },
+  { value: "SPECIAL", label: "Спецвыпуск" },
+];
+
+export const CATALOG_STATUSES: { value: CatalogStatus; label: string }[] = [
+  { value: "ongoing",  label: "Онгоинг" },
+  { value: "finished", label: "Завершён" },
+  { value: "announce", label: "Анонс" },
+];
+
+// Age ratings the catalog filters by server-side (f[age_ratings][]).
+// Verified against /anime/catalog/references/age-ratings.
+export const AGE_RATINGS: { value: string; label: string }[] = [
+  { value: "R0_PLUS",  label: "0+" },
+  { value: "R6_PLUS",  label: "6+" },
+  { value: "R12_PLUS", label: "12+" },
+  { value: "R16_PLUS", label: "16+" },
+  { value: "R18_PLUS", label: "18+" },
+];
+
+// Airing seasons the catalog filters by server-side (f[seasons][]).
+// Verified against /anime/catalog/references/seasons (lowercase values).
+export const SEASONS: { value: string; label: string }[] = [
+  { value: "winter", label: "Зима" },
+  { value: "spring", label: "Весна" },
+  { value: "summer", label: "Лето" },
+  { value: "autumn", label: "Осень" },
+];
+
+export interface CatalogFilters {
+  genres?: string[];     // Russian genre names (mapped to ids internally)
+  types?: string[];      // TV | MOVIE | OVA | ONA | SPECIAL
+  status?: CatalogStatus;
+  ageRatings?: string[]; // R0_PLUS | R6_PLUS | R12_PLUS | R16_PLUS | R18_PLUS
+  seasons?: string[];    // winter | spring | summer | autumn
+  yearFrom?: number;
+  yearTo?: number;
+  sort?: CatalogSort;
+  search?: string;
+  page?: number;         // 0-based
+  limit?: number;
+}
+
+export async function getCatalogPage(f: CatalogFilters): Promise<CatalogResult> {
+  const limit = f.limit ?? 48;
+  const p = (f.page ?? 0) + 1;
+  const parts: string[] = [`limit=${limit}`, `page=${p}`];
+  parts.push(f.sort === "rating" ? SORT_RATING : SORT_FRESH);
+
+  if (f.search) parts.push(`f%5Bsearch%5D=${encodeURIComponent(f.search)}`);
+
+  for (const g of f.genres ?? []) {
+    const id = genreId(g);
+    if (id) parts.push(`f%5Bgenres%5D%5B%5D=${id}`);
+  }
+  for (const t of f.types ?? []) {
+    parts.push(`f%5Btypes%5D%5B%5D=${encodeURIComponent(t)}`);
+  }
+  for (const ar of f.ageRatings ?? []) {
+    parts.push(`f%5Bage_ratings%5D%5B%5D=${encodeURIComponent(ar)}`);
+  }
+  for (const s of f.seasons ?? []) {
+    parts.push(`f%5Bseasons%5D%5B%5D=${encodeURIComponent(s)}`);
+  }
+  if (f.status === "ongoing")       parts.push(FILTER_ONGOING);
+  else if (f.status === "finished") parts.push("f%5Bpublish_statuses%5D%5B%5D=IS_NOT_ONGOING");
+  else if (f.status === "announce") parts.push("f%5Bproduction_statuses%5D%5B%5D=IS_IN_PRODUCTION");
+
+  if (f.yearFrom) parts.push(`f%5Byears%5D%5Bfrom_year%5D=${f.yearFrom}`);
+  if (f.yearTo)   parts.push(`f%5Byears%5D%5Bto_year%5D=${f.yearTo}`);
+
+  const d = await apiFetch<PagedResponse>(`/anime/catalog/releases?${parts.join("&")}`, 300);
   const total = d?.meta?.pagination?.total ?? 0;
   return { data: d?.data ?? [], total, totalPages: Math.ceil(total / limit) };
 }

@@ -113,7 +113,7 @@ export function MoodPicker() {
             <button
               key={m.id}
               onClick={() => pick(m.id)}
-              className="relative overflow-hidden rounded-2xl text-left transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+              className="relative overflow-hidden rounded-2xl text-left transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
               style={{
                 background: m.bg,
                 boxShadow: isActive ? `0 0 0 2px ${m.accent}, 0 8px 32px ${m.glow}` : `0 2px 12px rgba(0,0,0,0.4)`,

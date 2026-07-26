@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Loader2, Send, ThumbsUp, ThumbsDown, Trash2 } from "lucide-react";
 import { ProfileFrame } from "@/components/profile/ProfileFrame";
 import { TitleBadge } from "@/components/profile/TitleBadge";
+import { StickerPicker } from "@/components/stickers/StickerPicker";
+import { StickerText } from "@/components/stickers/StickerText";
+import { stickerToken } from "@/lib/stickers";
 
 interface CommentUser {
   id: string; name: string | null; image: string | null; profileFrame?: string | null;
@@ -48,6 +51,26 @@ export function CommentSection({ animeId }: { animeId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Insert a sticker token at the cursor (or append), keeping tokens space-separated.
+  function insertSticker(id: string) {
+    const token = stickerToken(id);
+    const el = textareaRef.current;
+    if (!el) {
+      setText(t => `${t}${t && !t.endsWith(" ") ? " " : ""}${token} `.slice(0, 1000));
+      return;
+    }
+    const start = el.selectionStart ?? el.value.length;
+    const end = el.selectionEnd ?? el.value.length;
+    setText(prev => {
+      const before = prev.slice(0, start);
+      const after = prev.slice(end);
+      const sep = before && !before.endsWith(" ") ? " " : "";
+      return `${before}${sep}${token} ${after}`.slice(0, 1000);
+    });
+    requestAnimationFrame(() => el.focus());
+  }
 
   const fetchComments = useCallback(async (cursor?: string, s = sort) => {
     const url = `/api/comments?animeId=${animeId}&sort=${s}${cursor ? `&cursor=${cursor}` : ""}`;
@@ -172,6 +195,7 @@ export function CommentSection({ animeId }: { animeId: string }) {
               />
               <div className="flex-1">
                 <textarea
+                  ref={textareaRef}
                   value={text}
                   onChange={e => setText(e.target.value)}
                   placeholder="Напишите комментарий..."
@@ -180,10 +204,11 @@ export function CommentSection({ animeId }: { animeId: string }) {
                   className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-violet-500 resize-none transition-colors placeholder:text-[var(--text3)]"
                 />
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-[var(--text3)]">{text.length}/1000</span>
+                  <span className="text-xs text-[var(--text3)] tabular-nums">{text.length}/1000</span>
                   <div className="flex items-center gap-2">
                     {error && <span className="text-xs text-red-400">{error}</span>}
                     {successMsg && <span className="text-xs text-green-400">{successMsg}</span>}
+                    <StickerPicker onPick={insertSticker} />
                     <button
                       type="submit"
                       disabled={submitting || text.trim().length < 3}
@@ -256,7 +281,9 @@ export function CommentSection({ animeId }: { animeId: string }) {
                   )}
                   <span className="text-xs text-[var(--text3)]">{timeAgo(c.createdAt)}</span>
                 </div>
-                <p className="text-sm text-[var(--text2)] leading-relaxed break-words">{c.text}</p>
+                <p className="text-sm text-[var(--text2)] leading-relaxed break-words">
+                  <StickerText text={c.text} />
+                </p>
 
                 {/* Actions */}
                 <div className="flex items-center gap-3 mt-2.5">

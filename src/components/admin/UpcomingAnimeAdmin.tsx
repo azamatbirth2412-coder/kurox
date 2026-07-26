@@ -90,7 +90,7 @@ export function UpcomingAnimeAdmin({ items }: { items: UpcomingItem[] }) {
     <div className="space-y-3">
       {items.map(item => (
         <Link key={item.id} href={`/anime/${item.slug}`} target="_blank"
-          className="flex items-center gap-3 p-3 rounded-xl bg-[var(--surface2)] hover:bg-[var(--surface3)] border border-[var(--border)] hover:border-violet-500/30 transition-all group">
+          className="flex items-center gap-3 p-3 rounded-xl bg-[var(--surface2)] hover:bg-[var(--surface3)] border border-[var(--border)] hover:border-violet-500/30 transition-colors group">
           {/* Poster */}
           <div className="w-10 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-[var(--surface3)]">
             {item.poster && (

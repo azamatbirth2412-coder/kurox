@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 const STORAGE_KEY = "kurox_splash_shown";
 
@@ -41,7 +42,7 @@ export function SplashScreen() {
             opacity: 0,
           }}
         >
-          <img src="/logo.png" alt="Kurox" width={80} height={80} className="rounded-[22px] shadow-2xl shadow-violet-900/60" />
+          <Image src="/logo.png" alt="Kurox" width={80} height={80} className="rounded-[22px] shadow-2xl shadow-violet-900/60" />
           {/* Glow ring */}
           <div
             className="absolute inset-0 rounded-[22px] border-2 border-violet-400/40"

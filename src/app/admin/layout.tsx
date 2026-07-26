@@ -38,7 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="p-2 border-t border-[var(--border)]">
           <Link
             href="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[var(--text3)] hover:bg-[var(--surface2)] hover:text-white transition-all"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[var(--text3)] hover:bg-[var(--surface2)] hover:text-white transition-colors"
           >
             <ArrowLeft size={15} /> На сайт
           </Link>

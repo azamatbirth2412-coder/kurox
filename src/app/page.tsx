@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { Suspense } from "react";
 import { ChevronRight, Flame, TrendingUp, Calendar, Hourglass, Zap } from "lucide-react";
 import {
   getTrending, getPopular, getSchedule, getOngoingPage, getNewReleases, getClassics,
-  animePoster, animeSlug, animeTitle, animeYear, animeEpisodes, animeEpisodesAired,
+  animePoster, animeSlug, animeTitle, animeYear, animeEpisodes, animeEpisodesAired, animeRating, animeVotes,
   GENRES, GENRE_ICONS, type AnilibriaAnime,
 } from "@/lib/anilibria";
 import { Sparkles, Clock3 } from "lucide-react";
@@ -42,7 +41,8 @@ function toCard(a: AnilibriaAnime) {
     year: animeYear(a),
     format: a.type?.description,
     status: a.is_ongoing ? "RELEASING" : "FINISHED",
-    rating: null,
+    rating: animeRating(a),
+    votes: animeVotes(a),
     episodes: animeEpisodes(a),
     episodesAired: animeEpisodesAired(a) || undefined,
     genres: a.genres?.slice(0, 2).map(g => g.name),
@@ -52,14 +52,19 @@ function toCard(a: AnilibriaAnime) {
 
 function SHeader({ title, href, icon: Icon }: { title: string; href?: string; icon?: React.ElementType }) {
   return (
-    <div className="flex items-center justify-between mb-5">
-      <h2 className="text-lg font-bold flex items-center gap-2.5 section-line">
-        {Icon && <Icon size={17} className="text-[var(--accent)] ml-1" />}
+    <div className="flex items-end justify-between gap-4 mb-5">
+      <h2 className="text-xl md:text-[22px] font-bold tracking-tight flex items-center gap-2.5 text-[var(--text)]">
+        {Icon && (
+          <span className="grid place-items-center w-8 h-8 rounded-lg bg-[var(--accent)]/12 ring-1 ring-[var(--accent)]/20 text-[var(--accent)] shrink-0">
+            <Icon size={16} />
+          </span>
+        )}
         {title}
       </h2>
       {href && (
-        <Link href={href} className="text-sm text-[var(--text2)] hover:text-[var(--accent)] transition-colors flex items-center gap-1 font-medium">
-          Все <ChevronRight size={14} />
+        <Link href={href} className="group shrink-0 flex items-center gap-1 text-sm font-medium text-[var(--text2)] hover:text-white transition-colors">
+          Все
+          <ChevronRight size={15} className="transition-transform duration-200 group-hover:translate-x-0.5" />
         </Link>
       )}
     </div>
