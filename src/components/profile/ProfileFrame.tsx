@@ -14,6 +14,12 @@ export const FRAMES = {
   vortex:    { name: "Вихрь",           colors: ["#0d0d0d","#222","#444","#1a1a1a","#333","#111","#0d0d0d"],             speed: 4  },
   nebula:    { name: "Туманность",      colors: ["#1a0030","#6a0dad","#a855f7","#7c3aed","#9b59b6","#6a0dad","#1a0030"], speed: 7  },
   smoke:     { name: "Дым",             colors: ["#111","#333","#777","#bbb","#666","#2a2a2a","#111"],                   speed: 10 },
+  frost:     { name: "Иней",            colors: ["#062a35","#0e5f75","#22d3ee","#a5f3fc","#67e8f9","#0e7490","#062a35"], speed: 9  },
+  circuit:   { name: "Схема",           colors: ["#04231a","#065f46","#10b981","#6ee7b7","#34d399","#047857","#04231a"], speed: 6  },
+  sakura:    { name: "Сакура",          colors: ["#3d1028","#9d174d","#ec4899","#fbcfe8","#f9a8d4","#be185d","#3d1028"], speed: 11 },
+  abyss:     { name: "Бездна",          colors: ["#0a0118","#2e1065","#7c3aed","#c4b5fd","#a78bfa","#4c1d95","#0a0118"], speed: 4  },
+  phoenix:   { name: "Феникс",          colors: ["#3d1500","#9a3412","#f97316","#fde68a","#fb923c","#c2410c","#3d1500"], speed: 3  },
+  prism:     { name: "Призма",          colors: ["#f472b6","#a855f7","#60a5fa","#2dd4bf","#facc15","#fb923c","#f472b6"], speed: 5  },
 } as const;
 
 export type FrameId = keyof typeof FRAMES;
@@ -611,6 +617,316 @@ function SmokeDecoration() {
   );
 }
 
+// ─── FROST ───────────────────────────────────────────────────────────────────
+// Six-fold crystal symmetry: long spikes with barbs, plus drifting flecks.
+function FrostDecoration() {
+  const spikes = Array.from({ length: 6 }, (_, i) => i * 60);
+  const flecks = Array.from({ length: 12 }, (_, i) => {
+    const a = (i * 30 + 15 - 90) * Math.PI / 180;
+    const r = 58 + (i % 3) * 7;
+    return {
+      x: C + r * Math.cos(a), y: C + r * Math.sin(a),
+      rad: i % 3 === 0 ? 2 : 1.3,
+      dur: (2.4 + (i % 4) * 0.5).toFixed(2),
+      delay: (i * 0.17).toFixed(2),
+    };
+  });
+  return (
+    <>
+      <defs>
+        <filter id="fr-blur" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="1.8" />
+        </filter>
+      </defs>
+
+      <circle cx={C} cy={C} r={53} fill="none" stroke="#a5f3fc" strokeWidth={9}
+        filter="url(#fr-blur)" opacity={0.12}>
+        <animate attributeName="opacity" values="0.06;0.2;0.06" dur="4.6s" repeatCount="indefinite" />
+      </circle>
+
+      <g>
+        <animateTransform attributeName="transform" type="rotate"
+          from={`0 ${C} ${C}`} to={`360 ${C} ${C}`} dur="34s" repeatCount="indefinite" />
+        {spikes.map((deg, i) => (
+          <g key={i} transform={`rotate(${deg} ${C} ${C})`}>
+            <line x1={C} y1={C - 50} x2={C} y2={C - 70} stroke="#e0f7ff" strokeWidth={2.2} strokeLinecap="round" opacity={0.85} />
+            <line x1={C} y1={C - 60} x2={C - 7} y2={C - 67} stroke="#a5f3fc" strokeWidth={1.5} strokeLinecap="round" opacity={0.7} />
+            <line x1={C} y1={C - 60} x2={C + 7} y2={C - 67} stroke="#a5f3fc" strokeWidth={1.5} strokeLinecap="round" opacity={0.7} />
+            <line x1={C} y1={C - 54} x2={C - 5} y2={C - 59} stroke="#67e8f9" strokeWidth={1.1} strokeLinecap="round" opacity={0.55} />
+            <line x1={C} y1={C - 54} x2={C + 5} y2={C - 59} stroke="#67e8f9" strokeWidth={1.1} strokeLinecap="round" opacity={0.55} />
+          </g>
+        ))}
+      </g>
+
+      {flecks.map((f, i) => (
+        <circle key={i} cx={f.x} cy={f.y} r={f.rad} fill="#e0f7ff"
+          style={{ animation: `svgFade ${f.dur}s ease-in-out infinite`, animationDelay: `${f.delay}s` }} />
+      ))}
+
+      <circle cx={C} cy={C} r={50} fill="none" stroke="#a5f3fc" strokeWidth={1} opacity={0.4} />
+    </>
+  );
+}
+
+// ─── CIRCUIT ─────────────────────────────────────────────────────────────────
+// Traces that step out from the ring at right angles, with nodes that pulse.
+function CircuitDecoration() {
+  const traces = Array.from({ length: 8 }, (_, i) => {
+    const deg = i * 45;
+    const a = (deg - 90) * Math.PI / 180;
+    const perp = a + Math.PI / 2;
+    const sx = C + 50 * Math.cos(a), sy = C + 50 * Math.sin(a);
+    const m1x = sx + Math.cos(a) * 9, m1y = sy + Math.sin(a) * 9;
+    const side = i % 2 === 0 ? 1 : -1;
+    const m2x = m1x + Math.cos(perp) * 8 * side, m2y = m1y + Math.sin(perp) * 8 * side;
+    const ex = m2x + Math.cos(a) * 8, ey = m2y + Math.sin(a) * 8;
+    return { d: `M${sx},${sy} L${m1x},${m1y} L${m2x},${m2y} L${ex},${ey}`, ex, ey, delay: (i * 0.24).toFixed(2) };
+  });
+  return (
+    <>
+      <defs>
+        <filter id="ci-blur" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="2" />
+        </filter>
+      </defs>
+
+      <circle cx={C} cy={C} r={53} fill="none" stroke="#34d399" strokeWidth={8}
+        filter="url(#ci-blur)" opacity={0.1}>
+        <animate attributeName="opacity" values="0.05;0.16;0.05" dur="3.2s" repeatCount="indefinite" />
+      </circle>
+
+      <circle cx={C} cy={C} r={56} fill="none" stroke="#34d399" strokeWidth={1.2}
+        strokeDasharray="3 9" opacity={0.5}>
+        <animateTransform attributeName="transform" type="rotate"
+          from={`0 ${C} ${C}`} to={`-360 ${C} ${C}`} dur="26s" repeatCount="indefinite" />
+      </circle>
+
+      {traces.map((t, i) => (
+        <g key={i}>
+          <path d={t.d} fill="none" stroke="#6ee7b7" strokeWidth={1.6}
+            strokeLinecap="square" strokeLinejoin="miter" opacity={0.75} />
+          <circle cx={t.ex} cy={t.ey} r={2.4} fill="#a7f3d0"
+            style={{ animation: "svgFade 1.9s ease-in-out infinite", animationDelay: `${t.delay}s` }} />
+        </g>
+      ))}
+
+      <circle cx={C} cy={C} r={50} fill="none" stroke="#34d399" strokeWidth={1} opacity={0.45} />
+    </>
+  );
+}
+
+// ─── SAKURA ──────────────────────────────────────────────────────────────────
+// Five-petal blossoms orbiting the ring, each drifting at its own tempo.
+function SakuraDecoration() {
+  const blossoms = Array.from({ length: 7 }, (_, i) => {
+    const a = (i * 51.4 - 90) * Math.PI / 180;
+    const r = 58 + (i % 3) * 6;
+    return {
+      x: C + r * Math.cos(a), y: C + r * Math.sin(a),
+      scale: 0.72 + (i % 3) * 0.16,
+      rot: i * 47,
+      dur: (3.1 + (i % 4) * 0.7).toFixed(2),
+      delay: (i * 0.3).toFixed(2),
+    };
+  });
+  return (
+    <>
+      <defs>
+        <filter id="sa-blur" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="2" />
+        </filter>
+      </defs>
+
+      <circle cx={C} cy={C} r={53} fill="none" stroke="#fbcfe8" strokeWidth={10}
+        filter="url(#sa-blur)" opacity={0.12}>
+        <animate attributeName="opacity" values="0.06;0.2;0.06" dur="5s" repeatCount="indefinite" />
+      </circle>
+
+      <g>
+        <animateTransform attributeName="transform" type="rotate"
+          from={`0 ${C} ${C}`} to={`360 ${C} ${C}`} dur="40s" repeatCount="indefinite" />
+        {blossoms.map((b, i) => (
+          <g key={i} transform={`translate(${b.x} ${b.y}) rotate(${b.rot}) scale(${b.scale})`}
+            style={{ animation: `svgFade ${b.dur}s ease-in-out infinite`, animationDelay: `${b.delay}s` }}>
+            {[0, 72, 144, 216, 288].map((d) => (
+              <ellipse key={d} cx={0} cy={-4.2} rx={2.5} ry={4.2}
+                transform={`rotate(${d})`} fill="#f9a8d4" opacity={0.9} />
+            ))}
+            <circle r={1.5} fill="#fff5f9" />
+          </g>
+        ))}
+      </g>
+
+      <circle cx={C} cy={C} r={50} fill="none" stroke="#f9a8d4" strokeWidth={1} opacity={0.42} />
+    </>
+  );
+}
+
+// ─── ABYSS ───────────────────────────────────────────────────────────────────
+// Rings collapsing inward — the pull reads as depth rather than decoration.
+function AbyssDecoration() {
+  const rings = [70, 62, 55];
+  const motes = Array.from({ length: 10 }, (_, i) => {
+    const a = (i * 36 - 90) * Math.PI / 180;
+    const r = 56 + (i % 4) * 6;
+    return {
+      x: C + r * Math.cos(a), y: C + r * Math.sin(a),
+      rad: i % 3 === 0 ? 1.9 : 1.2,
+      dur: (2.6 + (i % 5) * 0.5).toFixed(2),
+      delay: (i * 0.22).toFixed(2),
+    };
+  });
+  return (
+    <>
+      <defs>
+        <filter id="ab-blur" x="-45%" y="-45%" width="190%" height="190%">
+          <feGaussianBlur stdDeviation="3" />
+        </filter>
+      </defs>
+
+      <circle cx={C} cy={C} r={56} fill="none" stroke="#7c3aed" strokeWidth={14}
+        filter="url(#ab-blur)" opacity={0.14}>
+        <animate attributeName="opacity" values="0.07;0.24;0.07" dur="4s" repeatCount="indefinite" />
+      </circle>
+
+      {rings.map((r, i) => (
+        <circle key={i} cx={C} cy={C} r={r} fill="none" stroke="#a78bfa"
+          strokeWidth={1.4 - i * 0.25} opacity={0.5 - i * 0.1}
+          strokeDasharray={i % 2 ? "5 7" : undefined}>
+          <animate attributeName="r" values={`${r};${r - 6};${r}`}
+            dur={`${3.4 + i * 0.7}s`} repeatCount="indefinite" />
+          <animateTransform attributeName="transform" type="rotate"
+            from={`0 ${C} ${C}`} to={`${i % 2 ? -360 : 360} ${C} ${C}`}
+            dur={`${22 + i * 8}s`} repeatCount="indefinite" />
+        </circle>
+      ))}
+
+      {motes.map((m, i) => (
+        <circle key={i} cx={m.x} cy={m.y} r={m.rad} fill="#c4b5fd"
+          style={{ animation: `svgFade ${m.dur}s ease-in-out infinite`, animationDelay: `${m.delay}s` }} />
+      ))}
+
+      <circle cx={C} cy={C} r={50} fill="none" stroke="#8b5cf6" strokeWidth={1.2} opacity={0.5} />
+    </>
+  );
+}
+
+// ─── PHOENIX ─────────────────────────────────────────────────────────────────
+// Feather plumes sweeping off the ring, with embers lifting away.
+function PhoenixDecoration() {
+  const plumes = Array.from({ length: 9 }, (_, i) => {
+    const deg = i * 40;
+    const a = (deg - 90) * Math.PI / 180;
+    const perp = a + Math.PI / 2;
+    const sx = C + 50 * Math.cos(a), sy = C + 50 * Math.sin(a);
+    const len = 20 + (i % 3) * 6;
+    const bend = 13;
+    const cx1 = sx + Math.cos(a) * len * 0.5 + Math.cos(perp) * bend;
+    const cy1 = sy + Math.sin(a) * len * 0.5 + Math.sin(perp) * bend;
+    const ex = C + (50 + len) * Math.cos(a), ey = C + (50 + len) * Math.sin(a);
+    return {
+      d: `M${sx},${sy} Q${cx1},${cy1} ${ex},${ey}`,
+      col: i % 3 === 0 ? "#fde68a" : i % 2 === 0 ? "#fb923c" : "#f97316",
+      w: i % 2 === 0 ? 3.2 : 2,
+      dur: (2 + (i % 4) * 0.5).toFixed(2),
+      delay: (i * 0.18).toFixed(2),
+    };
+  });
+  const embers = Array.from({ length: 8 }, (_, i) => {
+    const a = (i * 45 + 22 - 90) * Math.PI / 180;
+    const r = 64 + (i % 3) * 6;
+    return {
+      x: C + r * Math.cos(a), y: C + r * Math.sin(a),
+      rad: i % 3 === 0 ? 2 : 1.3,
+      dur: (1.8 + (i % 4) * 0.6).toFixed(2),
+      delay: (i * 0.21).toFixed(2),
+    };
+  });
+  return (
+    <>
+      <defs>
+        <filter id="ph-blur" x="-45%" y="-45%" width="190%" height="190%">
+          <feGaussianBlur stdDeviation="2.6" />
+        </filter>
+      </defs>
+
+      <circle cx={C} cy={C} r={54} fill="none" stroke="#f97316" strokeWidth={12}
+        filter="url(#ph-blur)" opacity={0.15}>
+        <animate attributeName="opacity" values="0.08;0.26;0.08" dur="2.8s" repeatCount="indefinite" />
+      </circle>
+
+      <g>
+        <animateTransform attributeName="transform" type="rotate"
+          from={`0 ${C} ${C}`} to={`360 ${C} ${C}`} dur="24s" repeatCount="indefinite" />
+        {plumes.map((p, i) => (
+          <path key={i} d={p.d} fill="none" stroke={p.col} strokeWidth={p.w} strokeLinecap="round"
+            style={{ animation: `svgFade ${p.dur}s ease-in-out infinite`, animationDelay: `${p.delay}s` }} />
+        ))}
+      </g>
+
+      {embers.map((e, i) => (
+        <circle key={i} cx={e.x} cy={e.y} r={e.rad} fill="#fde68a" filter="url(#ph-blur)"
+          style={{ animation: `svgFade ${e.dur}s ease-in-out infinite`, animationDelay: `${e.delay}s` }} />
+      ))}
+
+      <circle cx={C} cy={C} r={50} fill="none" stroke="#fbbf24" strokeWidth={1.2} opacity={0.55} />
+    </>
+  );
+}
+
+// ─── PRISM ───────────────────────────────────────────────────────────────────
+// Top tier: facets refracting a full spectrum, counter-rotating against the ring.
+function PrismDecoration() {
+  const facets = Array.from({ length: 12 }, (_, i) => {
+    const deg = i * 30;
+    const hues = ["#f472b6", "#a855f7", "#60a5fa", "#2dd4bf", "#facc15", "#fb923c"];
+    return { deg, col: hues[i % hues.length], delay: (i * 0.13).toFixed(2) };
+  });
+  return (
+    <>
+      <defs>
+        <filter id="pr-blur" x="-45%" y="-45%" width="190%" height="190%">
+          <feGaussianBlur stdDeviation="2.4" />
+        </filter>
+        <linearGradient id="pr-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#f472b6" />
+          <stop offset="25%" stopColor="#a855f7" />
+          <stop offset="50%" stopColor="#60a5fa" />
+          <stop offset="75%" stopColor="#2dd4bf" />
+          <stop offset="100%" stopColor="#facc15" />
+        </linearGradient>
+      </defs>
+
+      <circle cx={C} cy={C} r={55} fill="none" stroke="url(#pr-grad)" strokeWidth={12}
+        filter="url(#pr-blur)" opacity={0.18}>
+        <animate attributeName="opacity" values="0.1;0.3;0.1" dur="3.6s" repeatCount="indefinite" />
+      </circle>
+
+      {/* Facets sweep one way… */}
+      <g>
+        <animateTransform attributeName="transform" type="rotate"
+          from={`0 ${C} ${C}`} to={`360 ${C} ${C}`} dur="18s" repeatCount="indefinite" />
+        {facets.map((f, i) => (
+          <polygon key={i}
+            points={`${C},${C - 68} ${C - 5},${C - 55} ${C + 5},${C - 55}`}
+            transform={`rotate(${f.deg} ${C} ${C})`}
+            fill={f.col} opacity={0.8}
+            style={{ animation: "svgFade 2.6s ease-in-out infinite", animationDelay: `${f.delay}s` }} />
+        ))}
+      </g>
+
+      {/* …the spectrum ring the other, so the rim never reads as static. */}
+      <circle cx={C} cy={C} r={58} fill="none" stroke="url(#pr-grad)" strokeWidth={1.6}
+        strokeDasharray="4 6" opacity={0.7}>
+        <animateTransform attributeName="transform" type="rotate"
+          from={`360 ${C} ${C}`} to={`0 ${C} ${C}`} dur="14s" repeatCount="indefinite" />
+      </circle>
+
+      <circle cx={C} cy={C} r={50} fill="none" stroke="url(#pr-grad)" strokeWidth={1.4} opacity={0.75} />
+    </>
+  );
+}
+
 // ─── Registry ─────────────────────────────────────────────────────────────────
 const DECORATIONS: Partial<Record<FrameId, () => React.ReactNode>> = {
   eclipse:   () => <EclipseDecoration />,
@@ -622,6 +938,12 @@ const DECORATIONS: Partial<Record<FrameId, () => React.ReactNode>> = {
   vortex:    () => <VortexDecoration />,
   nebula:    () => <NebulaDecoration />,
   smoke:     () => <SmokeDecoration />,
+  frost:     () => <FrostDecoration />,
+  circuit:   () => <CircuitDecoration />,
+  sakura:    () => <SakuraDecoration />,
+  abyss:     () => <AbyssDecoration />,
+  phoenix:   () => <PhoenixDecoration />,
+  prism:     () => <PrismDecoration />,
 };
 
 const GLOW: Partial<Record<FrameId, string>> = {
@@ -634,6 +956,12 @@ const GLOW: Partial<Record<FrameId, string>> = {
   vortex:    "#888888",
   nebula:    "#9b59b6",
   smoke:     "#cccccc",
+  frost:     "#a5f3fc",
+  circuit:   "#34d399",
+  sakura:    "#f9a8d4",
+  abyss:     "#8b5cf6",
+  phoenix:   "#fb923c",
+  prism:     "#c4b5fd",
 };
 
 // ─── Main Component ───────────────────────────────────────────────────────────

@@ -9,6 +9,9 @@ export const LEVEL_TITLES = [
   { minLevel: 100, title: "Аномалия", emoji: "💀" },
 ];
 
+// Unlock levels double as the rarity tier (see src/lib/rarity.ts frameRarity):
+// <5 common, 5–15 rare, 20–45 epic, 60+ legendary. New frames are slotted to
+// keep every tier populated rather than bunching at the top.
 export const FRAME_UNLOCKS: Record<string, number> = {
   default:   0,
   eclipse:   5,
@@ -17,9 +20,15 @@ export const FRAME_UNLOCKS: Record<string, number> = {
   soul:      20,
   thorns:    25,
   firering:  30,
+  frost:     35,
+  circuit:   40,
   nebula:    45,
+  sakura:    50,
   smoke:     60,
+  abyss:     70,
   starlight: 80,
+  phoenix:   90,
+  prism:     100,
 };
 
 export function calcLevel(xp: number): number {
