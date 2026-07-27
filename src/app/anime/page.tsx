@@ -10,6 +10,7 @@ import { AnimeCard } from "@/components/anime/AnimeCard";
 import { CatalogFilters, type CatalogFilterState } from "@/components/anime/CatalogFilters";
 import { AdBanner } from "@/components/ui/AdBanner";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { jsonLdHtml } from "@/lib/jsonld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://kurox.ru";
 const CURRENT_YEAR = new Date().getFullYear();
@@ -210,7 +211,7 @@ export default async function AnimeCatalogPage({ searchParams }: PageProps) {
     <div className="max-w-[1400px] mx-auto px-4 py-8">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(breadcrumbSchema) }}
       />
       <div className="mb-6">
         <div className="flex items-center gap-1.5 text-xs text-[var(--text3)] mb-2">

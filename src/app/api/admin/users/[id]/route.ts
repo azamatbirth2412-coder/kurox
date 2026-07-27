@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdminUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-async function requireAdmin() {
-  const session = await auth();
-  if ((session?.user as any)?.role !== "ADMIN") return null;
-  return session;
-}
+// Re-checks the DB rather than trusting the year-long JWT: a demoted admin must
+// not be able to call action:"makeAdmin" here and undo their own demotion.
+const requireAdmin = requireAdminUser;
 
 export async function PATCH(
   req: NextRequest,
@@ -26,8 +24,7 @@ export async function PATCH(
   try {
     if (action === "ban") {
       // Don't let an admin lock themselves out
-      const self = await prisma.user.findUnique({ where: { email: session.user!.email! }, select: { id: true } });
-      if (self?.id === id) {
+      if (session.id === id) {
         return NextResponse.json({ error: "Cannot ban yourself" }, { status: 400 });
       }
       await prisma.user.update({
@@ -88,8 +85,7 @@ export async function DELETE(
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { id } = await params;
-  const self = await prisma.user.findUnique({ where: { email: session.user!.email! } });
-  if (self?.id === id) return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 });
+  if (session.id === id) return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 });
   try {
     await prisma.user.delete({ where: { id } });
   } catch (e: unknown) {

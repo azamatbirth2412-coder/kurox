@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { jsonLdHtml } from "@/lib/jsonld";
 
 interface BreadcrumbItem {
   label: string;
@@ -24,7 +25,7 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLd) }}
       />
       <nav aria-label="Хлебные крошки" className="flex items-center gap-1 text-sm text-gray-400 flex-wrap">
         {items.map((item, i) => (

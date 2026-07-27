@@ -4,12 +4,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
 import {
   Search, Menu, X, User, LogOut, Settings,
-  ChevronDown, Shuffle, Tv, Film, Sparkles, Loader2, Zap, TrendingUp, Calendar, Trophy, Play, Target,
+  ChevronDown, Shuffle, Tv, Film, Sparkles, Loader2, Zap, Calendar, Trophy, Play,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import { GENRES } from "@/lib/anilibria";
 import { ProfileFrame } from "@/components/profile/ProfileFrame";
+import { TitleBadge } from "@/components/profile/TitleBadge";
 
 interface SearchResult {
   id: number;
@@ -25,7 +26,6 @@ interface SearchResult {
 const CATALOG_LINKS = [
   { label: "Свежие серии",  href: "/anime?sort=trending",  icon: Zap,         desc: "Новые серии сегодня" },
   { label: "Онгоинги",      href: "/anime?sort=ongoing",   icon: Tv,          desc: "Выходят прямо сейчас" },
-  { label: "Топ аниме",     href: "/top",                  icon: TrendingUp,  desc: "Рейтинг лучших тайтлов" },
   { label: "Расписание",    href: "/schedule",             icon: Calendar,    desc: "Когда выйдет новая серия" },
 ];
 
@@ -260,19 +260,9 @@ export function Header() {
               )}
             </div>
 
-            <Link href="/top"
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-[var(--text2)] hover:text-white hover:bg-white/5 transition-colors">
-              <TrendingUp size={14} /> Топ аниме
-            </Link>
-
             <Link href="/leaderboard"
               className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-[var(--text2)] hover:text-white hover:bg-white/5 transition-colors">
               <Trophy size={14} /> Лидерборд
-            </Link>
-
-            <Link href="/quests"
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-[var(--text2)] hover:text-white hover:bg-white/5 transition-colors">
-              <Target size={14} /> Дейлики
             </Link>
 
             <Link href="/schedule"
@@ -358,19 +348,13 @@ export function Header() {
                   style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
                 >
                   {(() => {
-                    const t = (session.user as any)?.activeTitle as { name: string; emoji: string; color: string; rarity: string } | null;
+                    const t = (session.user as any)?.activeTitle as { key: string; name: string; emoji: string; color: string; rarity: string } | null;
                     if (!t) return null;
-                    const isLeg = t.rarity === "legendary";
-                    const isEpic = t.rarity === "epic";
                     return (
-                      <span style={{
-                        fontSize: 11, fontWeight: 700, letterSpacing: "0.02em",
-                        color: t.color,
-                        background: isLeg ? `linear-gradient(90deg, ${t.color}40, ${t.color}22)` : `${t.color}22`,
-                        border: `1px solid ${t.color}${isLeg ? "60" : isEpic ? "48" : "38"}`,
-                        boxShadow: isLeg ? `0 0 10px ${t.color}38` : undefined,
-                        padding: "2px 7px", borderRadius: 6, whiteSpace: "nowrap",
-                      }}>{t.emoji} {t.name}</span>
+                      <TitleBadge
+                        name={t.name} emoji={t.emoji} color={t.color}
+                        rarity={t.rarity} titleKey={t.key} size="sm"
+                      />
                     );
                   })()}
                   <ProfileFrame
@@ -398,14 +382,13 @@ export function Header() {
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="text-sm font-bold truncate">{session.user?.name || "Пользователь"}</p>
                             {(() => {
-                              const t = (session.user as any)?.activeTitle as { name: string; emoji: string; color: string; rarity: string } | null;
+                              const t = (session.user as any)?.activeTitle as { key: string; name: string; emoji: string; color: string; rarity: string } | null;
                               if (!t) return null;
                               return (
-                                <span style={{
-                                  fontSize: 10, fontWeight: 700, color: t.color,
-                                  background: `${t.color}22`, border: `1px solid ${t.color}40`,
-                                  padding: "1px 5px", borderRadius: 4, whiteSpace: "nowrap",
-                                }}>{t.emoji} {t.name}</span>
+                                <TitleBadge
+                                  name={t.name} emoji={t.emoji} color={t.color}
+                                  rarity={t.rarity} titleKey={t.key} size="sm"
+                                />
                               );
                             })()}
                           </div>
@@ -518,14 +501,8 @@ export function Header() {
             <Link href="/anime?sort=trending" className="flex items-center gap-2 py-2.5 text-sm font-medium text-[var(--text2)] hover:text-white transition-colors">
               Тренды
             </Link>
-            <Link href="/top" className="flex items-center gap-2 py-2.5 text-sm font-medium text-[var(--text2)] hover:text-white transition-colors">
-              <TrendingUp size={15} /> Топ аниме
-            </Link>
             <Link href="/leaderboard" className="flex items-center gap-2 py-2.5 text-sm font-medium text-[var(--text2)] hover:text-white transition-colors">
               <Trophy size={15} /> Лидерборд
-            </Link>
-            <Link href="/quests" className="flex items-center gap-2 py-2.5 text-sm font-medium text-[var(--text2)] hover:text-white transition-colors">
-              <Target size={15} /> Дейлики
             </Link>
             <Link href="/schedule" className="flex items-center gap-2 py-2.5 text-sm font-medium text-[var(--text2)] hover:text-white transition-colors">
               <Sparkles size={15} /> Расписание

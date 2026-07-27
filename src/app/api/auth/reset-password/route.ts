@@ -22,8 +22,19 @@ export async function POST(req: NextRequest) {
     if (typeof password !== "string" || password.length < 8)
       return NextResponse.json({ error: "Пароль минимум 8 символов" }, { status: 400 });
 
+    // SECURITY: the reset "token" is only a 6-digit number (see forgot-password).
+    // The previous `where: email ? {email, token} : {token}` fallback meant a request
+    // that simply omitted `email` was matched against EVERY outstanding token in the
+    // table — so one lucky guess out of 10^6 took over whichever account happened to
+    // hold that code, with no need to know or target any specific user. Requiring the
+    // email binds each guess to one account. The real UI flow
+    // (src/app/auth/forgot-password/page.tsx) always posts { email, code, password },
+    // so this does not change any reachable user journey.
+    if (!email || typeof email !== "string")
+      return NextResponse.json({ error: "Неверный код" }, { status: 400 });
+
     const record = await prisma.passwordResetToken.findFirst({
-      where: email ? { email, token: lookupCode } : { token: lookupCode },
+      where: { email, token: lookupCode },
     });
 
     if (!record)

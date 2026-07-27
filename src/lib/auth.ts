@@ -30,6 +30,32 @@ export async function isUserBanned(userId: string): Promise<boolean> {
   return !user || user.role === "BANNED";
 }
 
+/**
+ * Server-side ADMIN check that hits the DB instead of trusting the JWT.
+ *
+ * Sessions last a year (see `maxAge` below) and the role is baked into the token
+ * at sign-in, so `session.user.role === "ADMIN"` stays true long after the account
+ * has been demoted, banned or deleted. Without a DB read, an admin who was demoted
+ * via `/api/admin/users/[id]` (`action: "removeAdmin"`) keeps full admin API access
+ * and can simply call that same endpoint with `action: "makeAdmin"` to restore
+ * themselves — the demotion never actually takes effect.
+ *
+ * Returns the live user row, or null if the caller is not currently an admin.
+ */
+export async function requireAdminUser(): Promise<{ id: string; email: string } | null> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, role: true },
+  });
+  if (!user || user.role !== "ADMIN") return null;
+
+  return { id: user.id, email: user.email };
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   session: { strategy: "jwt", maxAge: 365 * 24 * 60 * 60 }, // 1 year
@@ -76,7 +102,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (trigger === "update" && token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { image: true, role: true, profileFrame: true, activeTitle: { select: { name: true, emoji: true, color: true, rarity: true } } },
+          select: { image: true, role: true, profileFrame: true, activeTitle: { select: { key: true, name: true, emoji: true, color: true, rarity: true } } },
         });
         if (dbUser) {
           token.picture = jwtSafeImage(dbUser.image);
@@ -88,7 +114,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!token.id && token.email) {
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email as string },
-          select: { id: true, role: true, image: true, profileFrame: true, activeTitle: { select: { name: true, emoji: true, color: true, rarity: true } } },
+          select: { id: true, role: true, image: true, profileFrame: true, activeTitle: { select: { key: true, name: true, emoji: true, color: true, rarity: true } } },
         });
         if (dbUser) {
           token.id = dbUser.id;
@@ -102,7 +128,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (trigger !== "update" && token.id && (!token.profileFrame || token.profileFrame === "default")) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { profileFrame: true, activeTitle: { select: { name: true, emoji: true, color: true, rarity: true } } },
+          select: { profileFrame: true, activeTitle: { select: { key: true, name: true, emoji: true, color: true, rarity: true } } },
         });
         if (dbUser) {
           token.profileFrame = dbUser.profileFrame ?? "default";
@@ -121,7 +147,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.image = (token.picture as string | null) ?? null;
         (session.user as any).role = token.role;
         (session.user as any).profileFrame = (token.profileFrame as string) ?? "default";
-        (session.user as any).activeTitle = (token.activeTitle as { name: string; emoji: string; color: string; rarity: string } | null) ?? null;
+        (session.user as any).activeTitle = (token.activeTitle as { key: string; name: string; emoji: string; color: string; rarity: string } | null) ?? null;
       }
       return session;
     },

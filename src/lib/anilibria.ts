@@ -340,14 +340,43 @@ export async function searchAnilibriaPage(query: string, page = 0, limit = 48): 
   return { data: d?.data ?? [], total, totalPages: Math.ceil(total / limit) };
 }
 
-// Case-insensitive genre lookup — /genres page and old links use lowercase slugs ("экшен")
-function genreId(genre: string): number | undefined {
-  if (GENRE_IDS[genre]) return GENRE_IDS[genre];
-  const lower = genre.trim().toLowerCase();
-  for (const [name, id] of Object.entries(GENRE_IDS)) {
-    if (name.toLowerCase() === lower) return id;
+// ── Genre name resolution ───────────────────────────────────────────────────
+// Genre names arrive from three places that do not agree on spelling: our own
+// links (lowercase slugs like "экшен"), hand-written mood/recommendation tables,
+// and the API itself via a release's `genres[].name`. Folding е/ё/э together
+// makes all of them resolve to one id — notably "Сэйнен" (the common Russian
+// transliteration, used by our older links) and "Сейнен" (what the API returns),
+// and likewise "Сёдзё" vs "Сёдзе". No pair of distinct Anilibria genres collides
+// under this folding.
+function normGenreKey(s: string): string {
+  return s.trim().toLowerCase().replace(/[ёэ]/g, "е").replace(/\s+/g, " ");
+}
+
+// Built lazily: GENRE_IDS is declared at the bottom of this module.
+let genreLookupCache: Map<string, number> | null = null;
+function genreLookup(): Map<string, number> {
+  if (!genreLookupCache) {
+    genreLookupCache = new Map(
+      Object.entries(GENRE_IDS).map(([name, id]) => [normGenreKey(name), id]),
+    );
   }
-  return undefined;
+  return genreLookupCache;
+}
+
+function genreId(genre: string): number | undefined {
+  return genreLookup().get(normGenreKey(genre));
+}
+
+/**
+ * Canonical GENRE_IDS key for an arbitrarily-spelled genre name, or null when
+ * the name is not something the catalog can filter on. Callers that build
+ * catalog queries from untrusted input should validate through this first.
+ */
+export function canonicalGenre(genre: string): string | null {
+  const id = genreId(genre);
+  if (id === undefined) return null;
+  for (const [name, gid] of Object.entries(GENRE_IDS)) if (gid === id) return name;
+  return null;
 }
 
 export async function getByGenre(genre: string, page = 0, limit = 48): Promise<AnilibriaAnime[]> {
@@ -431,9 +460,18 @@ export async function getCatalogPage(f: CatalogFilters): Promise<CatalogResult> 
 
   if (f.search) parts.push(`f%5Bsearch%5D=${encodeURIComponent(f.search)}`);
 
-  for (const g of f.genres ?? []) {
-    const id = genreId(g);
-    if (id) parts.push(`f%5Bgenres%5D%5B%5D=${id}`);
+  // NB: the API ANDs multiple f[genres][] values, it does not OR them.
+  // (Verified live: Экшен+Комедия → 140 results, Спорт+Музыка → 0.)
+  //
+  // Fail CLOSED on a name we cannot map. Dropping an unresolvable genre and
+  // sending the query anyway used to return the entire catalog while the UI
+  // still showed the filter as active — "/anime?genre=typo" looked filtered but
+  // wasn't. Because genres are ANDed, dropping even one of several names widens
+  // the result set, so any unresolved name means no results, not more results.
+  if (f.genres?.length) {
+    const ids = f.genres.map(genreId);
+    if (ids.some(id => id === undefined)) return { data: [], total: 0, totalPages: 0 };
+    for (const id of ids) parts.push(`f%5Bgenres%5D%5B%5D=${id}`);
   }
   for (const t of f.types ?? []) {
     parts.push(`f%5Btypes%5D%5B%5D=${encodeURIComponent(t)}`);
@@ -464,7 +502,13 @@ export async function getById(id: number): Promise<AnilibriaAnime | null> {
   return apiFetch<AnilibriaAnime>(`/anime/releases/${id}`);
 }
 
-/* ── Genre list (in Russian, matching Anilibria's genre names) ── */
+/* ── Genre list ──────────────────────────────────────────────────────────────
+ * Complete mirror of https://anilibria.top/api/v1/anime/catalog/references/genres
+ * (all 35), using the API's own spelling so a release's `genres[].name` can be
+ * fed straight back into a catalog query. Order is deliberate — the popular
+ * genres stay first because Header and Footer render slices of GENRES — so
+ * append new entries at the end rather than sorting this object.
+ */
 export const GENRE_IDS: Record<string, number> = {
   "Экшен": 14,
   "Комедия": 1,
@@ -477,7 +521,8 @@ export const GENRE_IDS: Record<string, number> = {
   "Сверхъестественное": 28,
   "Фантастика": 22,
   "Повседневность": 10,
-  "Сэйнен": 5,
+  // API spelling. "Сэйнен" (our older links) still resolves via normGenreKey.
+  "Сейнен": 5,
   "Детектив": 25,
   "Магия": 18,
   "Исторический": 26,
@@ -489,6 +534,20 @@ export const GENRE_IDS: Record<string, number> = {
   "Мистика": 9,
   "Исекай": 34,
   "Музыка": 19,
+  // Appended: present upstream but previously missing here, so filtering by any
+  // of them silently returned the unfiltered catalog.
+  "Боевые искусства": 15,
+  "Демоны": 16,
+  "Игры": 17,
+  "Сёдзе": 20,
+  "Супер сила": 21,
+  "Этти": 23,
+  "Вампиры": 24,
+  "Киберпанк": 30,
+  "Сёдзе-ай": 31,
+  "Гарем": 32,
+  "Дзёсей": 33,
+  "Пародия": 36,
 };
 
 export const GENRES = Object.keys(GENRE_IDS);
@@ -505,7 +564,7 @@ export const GENRE_ICONS: Record<string, string> = {
   "Сверхъестественное": "✨",
   "Фантастика": "🚀",
   "Повседневность": "☕",
-  "Сэйнен": "📚",
+  "Сейнен": "📚",
   "Детектив": "🔍",
   "Магия": "🌟",
   "Исторический": "📜",
@@ -517,4 +576,16 @@ export const GENRE_ICONS: Record<string, string> = {
   "Мистика": "🔮",
   "Исекай": "🌀",
   "Музыка": "🎵",
+  "Боевые искусства": "🥋",
+  "Демоны": "😈",
+  "Игры": "🎮",
+  "Сёдзе": "🌸",
+  "Супер сила": "💥",
+  "Этти": "💋",
+  "Вампиры": "🧛",
+  "Киберпанк": "🌃",
+  "Сёдзе-ай": "💞",
+  "Гарем": "👯",
+  "Дзёсей": "🌹",
+  "Пародия": "🎪",
 };

@@ -4,9 +4,10 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  getByCode, getById, getByGenre, getPopular, getTrending, animePoster, animeSlug, animeTitle, animeYear, animeEpisodes, animeRating,
+  getByCode, getById, getPopular, animePoster, animeSlug, animeTitle, animeYear, animeEpisodes, animeRating,
   type AnilibriaAnime,
 } from "@/lib/anilibria";
+import { getSimilar } from "@/lib/recommendations";
 
 // Pre-render top 100 popular anime at build time for fastest Googlebot crawl
 export async function generateStaticParams() {
@@ -33,6 +34,7 @@ import { CommentSection } from "@/components/anime/CommentSection";
 import { ViewTracker } from "@/components/anime/ViewTracker";
 import { AdBanner } from "@/components/ui/AdBanner";
 import { Heart, Tv, Clock, Calendar, Star } from "lucide-react";
+import { jsonLdHtml } from "@/lib/jsonld";
 import { BackButton } from "@/components/ui/BackButton";
 
 interface PageProps { params: Promise<{ slug: string }> }
@@ -216,52 +218,10 @@ export default async function AnimePage({ params }: PageProps) {
     ? [...anime.episodes].sort((a, b) => a.sort_order - b.sort_order)
     : [];
 
-  // Multi-factor similar: genre overlap + year proximity + popularity + type
-  const genreNames = genres.slice(0, 4).map(g => g.name);
-  const genreSet = new Set(genreNames);
-  const baseYear = animeYear(anime) ?? 0;
-
-  // Fetch candidates: genres + popular as fallback pool
-  const [genreResults, popularPool, trendingPool] = await Promise.all([
-    Promise.allSettled(genreNames.map(g => getByGenre(g, 0, 35))),
-    getPopular(0, 50),
-    getTrending(0, 28),
-  ]);
-
-  const seen = new Set<number>([anime.id]);
-  const genreCandidates = genreResults
-    .flatMap(r => r.status === "fulfilled" ? r.value : [])
-    .filter(a => { if (seen.has(a.id)) return false; seen.add(a.id); return true; });
-
-  // Always include popular + trending as fallback so new anime with no genres still get results
-  const fallbackPool = [...popularPool, ...trendingPool]
-    .filter(a => { if (seen.has(a.id)) return false; seen.add(a.id); return true; });
-
-  const allCandidates = [...genreCandidates, ...fallbackPool];
-  const maxFav = Math.max(...allCandidates.map(a => a.added_in_users_favorites ?? 0), 1);
-
-  const similar: AnilibriaAnime[] = allCandidates
-    .map(a => {
-      const aGenres = new Set((a.genres ?? []).map(g => g.name));
-      // Genre overlap (0–1): how many of the source's genres match
-      const overlap = genreNames.length > 0
-        ? [...genreSet].filter(g => aGenres.has(g)).length / genreNames.length
-        : 0;
-      // Year proximity (0–1): within 5 years → max score
-      const yr = animeYear(a) ?? 0;
-      const yearProx = baseYear && yr ? Math.max(0, 1 - Math.abs(baseYear - yr) / 5) : 0.3;
-      // Popularity (0–1)
-      const pop = (a.added_in_users_favorites ?? 0) / maxFav;
-      // Same type bonus (TV / Movie / OVA / etc.)
-      const typeMatch = anime.type?.value && a.type?.value === anime.type.value ? 0.15 : 0;
-      // Ongoing bonus — prefer currently airing
-      const ongoingBonus = a.is_ongoing ? 0.05 : 0;
-      const score = overlap * 0.45 + yearProx * 0.2 + pop * 0.2 + typeMatch + ongoingBonus;
-      return { a, score };
-    })
-    .sort((x, y) => y.score - x.score)
-    .slice(0, 16)
-    .map(x => x.a);
+  // Similar titles — genre-dominant ranking over live Anilibria data, with the
+  // source's own franchise (and duplicate franchises) filtered out.
+  // See src/lib/recommendations.ts for the scoring model.
+  const similar: AnilibriaAnime[] = await getSimilar(anime, 16);
 
   const schema = buildSchema(anime, slug);
 
@@ -269,7 +229,7 @@ export default async function AnimePage({ params }: PageProps) {
     <div className="min-h-screen pb-16 relative">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(schema) }}
       />
       <ViewTracker animeId={String(anime.id)} />
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdminUser } from "@/lib/auth";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
@@ -15,8 +15,9 @@ const ALLOWED_TYPES: Record<string, string> = {
 const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if ((session?.user as any)?.role !== "ADMIN") {
+  // DB-backed — see requireAdminUser: a year-long JWT keeps a stale ADMIN role,
+  // and this endpoint writes attacker-chosen bytes into public/uploads.
+  if (!(await requireAdminUser())) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

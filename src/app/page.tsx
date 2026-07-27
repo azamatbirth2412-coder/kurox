@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { ChevronRight, Flame, TrendingUp, Calendar, Hourglass, Zap } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import {
   getTrending, getPopular, getSchedule, getOngoingPage, getNewReleases, getClassics,
   animePoster, animeSlug, animeTitle, animeYear, animeEpisodes, animeEpisodesAired, animeRating, animeVotes,
   GENRES, GENRE_ICONS, type AnilibriaAnime,
 } from "@/lib/anilibria";
-import { Sparkles, Clock3 } from "lucide-react";
 import { AnimeCard } from "@/components/anime/AnimeCard";
 import { AnimeCardSkeleton } from "@/components/anime/AnimeCardSkeleton";
 import { AdBanner } from "@/components/ui/AdBanner";
@@ -50,20 +49,28 @@ function toCard(a: AnilibriaAnime) {
   };
 }
 
-function SHeader({ title, href, icon: Icon }: { title: string; href?: string; icon?: React.ElementType }) {
+/* One head, one system, on every section.
+   Before: six of the eight heads carried an accent-tinted icon chip and two
+   did not, so titles started at two different x positions and none of them
+   lined up with the poster grid directly underneath. Dropping the chip lets
+   every title sit on the same left edge as the content it labels, and frees
+   the violet accent to mean one thing — "this is the thing you can click". */
+function SHeader({ title, href, hrefLabel = "Все" }: { title: string; href?: string; hrefLabel?: string }) {
   return (
-    <div className="flex items-end justify-between gap-4 mb-5">
-      <h2 className="text-xl md:text-[22px] font-bold tracking-tight flex items-center gap-2.5 text-[var(--text)]">
-        {Icon && (
-          <span className="grid place-items-center w-8 h-8 rounded-lg bg-[var(--accent)]/12 ring-1 ring-[var(--accent)]/20 text-[var(--accent)] shrink-0">
-            <Icon size={16} />
-          </span>
-        )}
+    <div className="flex items-center justify-between gap-4 mb-[var(--gap-head)] md:mb-[var(--gap-head-lg)]">
+      <h2
+        className="font-bold tracking-tight text-[var(--text)]"
+        style={{ fontSize: "var(--text-section)" }}
+      >
         {title}
       </h2>
       {href && (
-        <Link href={href} className="group shrink-0 flex items-center gap-1 text-sm font-medium text-[var(--text2)] hover:text-white transition-colors">
-          Все
+        <Link
+          href={href}
+          className="group -mr-2 shrink-0 inline-flex items-center gap-1 rounded-lg px-2 text-sm font-medium text-[var(--text2)] hover:text-white transition-colors"
+          style={{ minHeight: "var(--tap)" }}
+        >
+          {hrefLabel}
           <ChevronRight size={15} className="transition-transform duration-200 group-hover:translate-x-0.5" />
         </Link>
       )}
@@ -209,26 +216,29 @@ export default function HomePage() {
   return (
     <div className="pb-16">
       <Suspense fallback={<div className="h-[520px] hero-bg" />}><HeroBanner /></Suspense>
-      <div className="max-w-[1400px] mx-auto px-4 space-y-14 mt-12">
+      {/* One rhythm token for every gap between sections, one for head→content.
+          Previously the page mixed mt-12 / space-y-14 / mb-5 with an ad banner
+          that inherited a full section gap on both sides. */}
+      <div className="max-w-[1400px] mx-auto px-4 mt-10 md:mt-14 space-y-[var(--gap-section)] md:space-y-[var(--gap-section-lg)]">
         <section>
-          <SHeader title="Свежие серии" href="/anime?sort=trending" icon={Flame} />
+          <SHeader title="Свежие серии" href="/anime?sort=trending" />
           <Suspense fallback={<SkeletonRow />}><TrendingRow /></Suspense>
         </section>
 
-        <AdBanner slot="between-cards" className="py-2" />
+        <AdBanner slot="between-cards" />
 
         <section>
-          <SHeader title="Выходит на этой неделе" href="/anime?sort=schedule" icon={Calendar} />
+          <SHeader title="Выходит на этой неделе" href="/anime?sort=schedule" />
           <Suspense fallback={<SkeletonRow />}><ScheduleRow /></Suspense>
         </section>
 
         <section>
-          <SHeader title="По жанрам" href="/anime" />
+          <SHeader title="По жанрам" href="/genres" hrefLabel="Все жанры" />
           <div className="flex flex-wrap gap-2">
             {GENRES.map(g => (
               <Link key={g} href={`/genre/${encodeURIComponent(g)}`}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-full text-sm text-[var(--text2)] hover:border-[var(--accent)]/50 hover:text-white hover:bg-[var(--accent)]/10 transition-[color,background-color,border-color] duration-200 group">
-                <span className="text-base leading-none group-hover:scale-110 transition-transform">{GENRE_ICONS[g] || "🎬"}</span>
+                className="inline-flex items-center gap-2 min-h-10 px-4 bg-[var(--surface)] border border-[var(--border)] rounded-full text-sm text-[var(--text2)] hover:border-[var(--accent)]/50 hover:text-white hover:bg-[var(--accent)]/10 transition-[color,background-color,border-color] duration-200 group">
+                <span aria-hidden className="text-base leading-none group-hover:scale-110 transition-transform">{GENRE_ICONS[g] || "🎬"}</span>
                 <span className="font-medium">{g}</span>
               </Link>
             ))}
@@ -241,33 +251,35 @@ export default function HomePage() {
         </section>
 
         <section>
-          <SHeader title="Онгоинги" href="/anime?sort=ongoing" icon={Zap} />
+          <SHeader title="Онгоинги" href="/anime?sort=ongoing" />
           <Suspense fallback={<SkeletonRow />}><OngoingRow /></Suspense>
         </section>
 
         <section>
-          <SHeader title="Популярное за всё время" href="/anime?sort=popular" icon={TrendingUp} />
+          <SHeader title="Популярное за всё время" href="/anime?sort=popular" />
           <Suspense fallback={<SkeletonRow count={14} />}><PopularRow /></Suspense>
         </section>
 
         <section>
-          <SHeader title="Новинки — рекомендуем сегодня" href="/anime?sort=trending" icon={Sparkles} />
+          <SHeader title="Новинки — рекомендуем сегодня" href="/anime?sort=trending" />
           <Suspense fallback={<SkeletonRow />}><NewReleasesRow /></Suspense>
         </section>
 
         <section>
-          <SHeader title="Классика — выбор дня" href="/anime?sort=popular" icon={Clock3} />
+          <SHeader title="Классика — выбор дня" href="/anime?sort=popular" />
           <Suspense fallback={<SkeletonRow />}><ClassicsRow /></Suspense>
         </section>
 
         <section>
-          <SHeader title="Скоро выйдут — 2026" icon={Hourglass} />
+          {/* No year in the label: it was hard-coded "2026" and would quietly
+              start lying the moment the calendar rolled over. */}
+          <SHeader title="Скоро выйдут" />
           <UpcomingAnime />
         </section>
 
         <section className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-6 md:p-8">
           <h1 className="text-base font-bold mb-3">Смотреть аниме онлайн бесплатно с русской озвучкой — Kurox</h1>
-          <div className="text-sm text-[var(--text2)] leading-relaxed space-y-2">
+          <div className="text-sm text-[var(--text2)] leading-relaxed space-y-2 max-w-[70ch]" style={{ textWrap: "pretty" } as React.CSSProperties}>
             <p><strong className="text-[var(--text)]">Kurox</strong> — лучший сайт для просмотра аниме онлайн с русской озвучкой в HD 1080p. Тысячи аниме бесплатно, без рекламы и без регистрации.</p>
             <p>Онгоинги 2025–2026, классика, новинки — всё с озвучкой от команды Anilibria. Удобный каталог с фильтрами по жанрам, расписание выхода серий и персональные рекомендации.</p>
           </div>

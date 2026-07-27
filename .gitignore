@@ -43,3 +43,18 @@ next-env.d.ts
 /src/generated/prisma
 
 .vercel
+
+# ── Credential-bearing local scripts ────────────────────────────────────────
+# These hardcode the production Neon connection string (user + password) inline
+# instead of reading process.env.DATABASE_URL. They are currently UNTRACKED, but
+# the repo root is full of stray files and a single `git add -A` would commit the
+# production DB password to history permanently. Keep them out of the index.
+# ACTION REQUIRED: rotate that Neon password and change these scripts to read
+# from process.env before un-ignoring anything here.
+set-admin.mjs
+push-neon.mjs
+*-neon.mjs
+
+# Local operational logs (may contain emails / IPs / tokens)
+cron.log
+logs/

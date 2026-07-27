@@ -37,16 +37,20 @@ export function PlayerSources({ animeId, episodes, title, titleEn, poster, slug 
   return (
     <div>
       {/* Source tabs */}
-      <div className="flex items-center gap-1 mb-3">
+      <div className="flex items-center gap-1 mb-3" role="tablist" aria-label="Источник видео">
         <span className="text-xs text-[var(--text3)] mr-1">Источник:</span>
         {SOURCES.map(s => (
           <button
             key={s.id}
+            role="tab"
+            aria-selected={source === s.id}
             onClick={() => setSource(s.id)}
             className={[
-              "px-3 py-1 rounded-lg text-xs font-semibold transition-all",
+              "inline-flex items-center justify-center h-10 px-4 rounded-lg text-xs font-semibold",
+              "transition-[background-color,border-color,color] duration-150",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]",
               source === s.id
-                ? "bg-[var(--accent)] text-white shadow-sm shadow-[var(--accent)]/30"
+                ? "bg-[var(--accent)] text-white shadow-[0_3px_10px_-4px_rgba(139,92,246,0.7)]"
                 : "bg-[var(--surface)] border border-[var(--border)] text-[var(--text2)] hover:border-[var(--accent)]/40 hover:text-[var(--accent)]",
             ].join(" ")}
           >

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, isUserBanned } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { advanceQuestSafe } from "@/lib/quests";
 
 // GET /api/ratings?animeId=… — average score + current user's score
 export async function GET(req: NextRequest) {
@@ -51,22 +50,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid data" }, { status: 400 });
   }
 
-  // Only the first rating of a title counts toward the daily "Оцени аниме"
-  // quest — re-rating an already-rated title must not re-advance it.
-  const alreadyRated = await prisma.rating.findUnique({
-    where: { userId_animeId: { userId: session.user.id, animeId } },
-    select: { id: true },
-  });
-
   const rating = await prisma.rating.upsert({
     where: { userId_animeId: { userId: session.user.id, animeId } },
     update: { score },
     create: { userId: session.user.id, animeId, score },
   });
-
-  if (!alreadyRated) {
-    await advanceQuestSafe(session.user.id, "RATE", 1);
-  }
 
   const avg = await prisma.rating.aggregate({
     where: { animeId },

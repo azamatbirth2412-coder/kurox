@@ -73,11 +73,15 @@ const CODE_HTML = (code: string) => `<!DOCTYPE html>
 </html>`;
 
 export async function sendPasswordResetCode(email: string, code: string): Promise<void> {
+  // Google shows app passwords as "abcd efgh ijkl mnop"; pasted verbatim the
+  // spaces make Gmail reject the login with 535-5.7.8.
+  const pass = process.env.SMTP_PASS?.replace(/\s+/g, "");
+
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.gmail.com",
     port: Number(process.env.SMTP_PORT) || 587,
     secure: false,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    auth: { user: process.env.SMTP_USER?.trim(), pass },
   });
 
   await transporter.sendMail({

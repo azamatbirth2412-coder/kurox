@@ -1,10 +1,5 @@
-// Colours mirror the shared rarity tokens in globals.css (--rarity-*).
-const RARITY_META: Record<string, { label: string; color: string; glow: string }> = {
-  common:    { label: "Обычный",    color: "#9ca3af", glow: "none" },
-  rare:      { label: "Редкий",     color: "#3b82f6", glow: "0 0 10px rgba(59,130,246,0.45)" },
-  epic:      { label: "Эпический",  color: "#a855f7", glow: "0 0 14px rgba(168,85,247,0.55)" },
-  legendary: { label: "Легендарный",color: "#f59e0b", glow: "0 0 18px rgba(245,158,11,0.6)" },
-};
+/** The single final title, rendered with the one-off holographic treatment. */
+export const MYTHIC_TITLE_KEY = "anilibria";
 
 interface TitleBadgeProps {
   name: string;
@@ -12,23 +7,44 @@ interface TitleBadgeProps {
   color: string;
   rarity?: string;
   size?: "sm" | "md";
+  /** Pass the title's `key` so the final title can claim its unique style. */
+  titleKey?: string;
 }
 
-export function TitleBadge({ name, emoji, color, rarity = "common", size = "sm" }: TitleBadgeProps) {
-  const isLegendary = rarity === "legendary";
-  const meta = RARITY_META[rarity] ?? RARITY_META.common;
+/** Tier → the animation class that drives its aura. Common stays static. */
+const TIER_CLASS: Record<string, string> = {
+  rare: "title-badge-rare",
+  epic: "title-badge-epic",
+  legendary: "title-badge-legendary",
+};
+
+export function TitleBadge({ name, emoji, color, rarity = "common", size = "sm", titleKey }: TitleBadgeProps) {
+  const isMythic = titleKey === MYTHIC_TITLE_KEY;
+  const tierClass = isMythic ? "title-badge-mythic" : (TIER_CLASS[rarity] ?? "");
 
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full font-semibold whitespace-nowrap leading-none ${
         size === "sm" ? "px-2 py-1 text-[11px]" : "px-3 py-1.5 text-[13px]"
-      } ${isLegendary ? "title-badge-legendary" : ""}`}
-      style={{
-        background: `linear-gradient(135deg, ${color}22 0%, ${color}0e 100%)`,
-        border: `1px solid ${color}55`,
-        color,
-        boxShadow: meta.glow !== "none" ? meta.glow : undefined,
-      }}
+      } ${tierClass}`}
+      style={
+        isMythic
+          ? {
+              // The rotating ring supplies the border; keep the fill transparent
+              // so ::after shows through, and let the text carry the colour.
+              color,
+              textShadow: `0 0 10px ${color}88`,
+            }
+          : ({
+              background: `linear-gradient(135deg, ${color}26 0%, ${color}0e 100%)`,
+              border: `1px solid ${color}${rarity === "legendary" ? "80" : rarity === "epic" ? "66" : "55"}`,
+              color,
+              // Consumed by the tier keyframes so each badge glows in its own hue.
+              "--tc-soft": `${color}40`,
+              "--tc-strong": `${color}99`,
+              textShadow: rarity === "legendary" ? `0 0 8px ${color}55` : undefined,
+            } as React.CSSProperties)
+      }
       title={name}
     >
       <span aria-hidden="true" style={{ fontSize: size === "sm" ? 11 : 14 }}>{emoji}</span>

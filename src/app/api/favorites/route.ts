@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { advanceQuestSafe } from "@/lib/quests";
 
 export async function GET() {
   const session = await auth();
@@ -31,8 +30,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ added: false });
   } else {
     await prisma.favorite.create({ data: { userId: session.user.id, animeId } });
-    // Advance the daily "Добавь в избранное" quest (only on add, not toggle-off).
-    await advanceQuestSafe(session.user.id, "FAVORITE", 1);
     return NextResponse.json({ added: true });
   }
 }

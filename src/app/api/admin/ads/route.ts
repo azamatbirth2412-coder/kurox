@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdminUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -11,8 +11,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if ((session?.user as any)?.role !== "ADMIN") {
+  // DB-backed: the JWT caches `role` for a year, so a demoted admin would still
+  // pass a token-only check and could keep injecting arbitrary HTML into ad slots.
+  if (!(await requireAdminUser())) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const { slot, code, isActive } = await req.json();

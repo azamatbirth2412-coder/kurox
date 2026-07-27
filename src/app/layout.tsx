@@ -5,6 +5,7 @@ import { Providers } from "@/components/Providers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { TVMode } from "@/components/TVMode";
+import { jsonLdHtml } from "@/lib/jsonld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://kurox.ru";
 
@@ -111,7 +112,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="dns-prefetch" href="https://cdn.anilibria.tv" />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify([websiteSchema, orgSchema]) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdHtml([websiteSchema, orgSchema]) }}
         />
       </head>
       <body className="min-h-screen flex flex-col">

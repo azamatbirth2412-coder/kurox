@@ -51,10 +51,31 @@ export function AnimeCard({
       : `${episodes} эп.`
     : null;
 
+  // ONE status badge, never two. Callers derive `isNew` from the same
+  // is_ongoing flag that produces RELEASING, so every airing title used to
+  // wear "НОВОЕ" and "ОНГОИНГ" stacked on top of each other — two chips
+  // saying one thing, over a poster only ~110px wide on a phone.
+  const statusBadge = isOngoing
+    ? { label: "ОНГОИНГ", tone: "bg-emerald-500/90 ring-emerald-300/30" }
+    : isNew
+      ? { label: "НОВОЕ", tone: "bg-rose-500/90 ring-rose-300/30" }
+      : null;
+
+  // Format is metadata, not status — it belongs with year and episode count,
+  // not floating over the artwork. Moving it off the poster also ends the
+  // collision between a long vote count and the format chip on narrow cards.
+  const meta = [
+    year ? String(year) : null,
+    formatLabel,
+    epText,
+  ].filter(Boolean) as string[];
+
+  const genreLine = genres?.length ? genres.slice(0, 2).join(" · ") : null;
+
   return (
     <Link href={href} className="group flex flex-col card-hover h-full">
       {/* Poster */}
-      <div className="relative aspect-[2/3] rounded-[var(--radius)] overflow-hidden bg-[var(--surface2)] flex-shrink-0">
+      <div className="card-poster relative aspect-[2/3] rounded-[var(--radius)] overflow-hidden bg-[var(--surface2)] flex-shrink-0">
         {poster ? (
           <Image
             src={poster}
@@ -76,7 +97,7 @@ export function AnimeCard({
 
         {/* Play button — optical nudge (ml-0.5) centres the triangle in the disc */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-[transform,opacity] duration-300 ease-out scale-90 group-hover:scale-100">
-          <div className="w-14 h-14 rounded-full bg-violet-600/85 backdrop-blur-md border border-violet-300/50 flex items-center justify-center shadow-[0_8px_24px_-6px_rgba(139,92,246,0.7)]">
+          <div className="w-14 h-14 rounded-full bg-violet-600/90 backdrop-blur-md ring-1 ring-white/25 flex items-center justify-center shadow-[0_10px_22px_-8px_rgba(0,0,0,.85)]">
             <Play size={22} className="text-white fill-white ml-0.5" />
           </div>
         </div>
@@ -92,54 +113,28 @@ export function AnimeCard({
           </div>
         )}
 
-        {/* TOP-RIGHT badges */}
-        <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
-          {isNew && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-tight bg-rose-500/90 text-white shadow-[0_0_8px_rgba(244,63,94,0.6)]">
-              НОВОЕ
-            </span>
-          )}
-          {isOngoing && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-tight bg-emerald-500/90 text-white shadow-[0_0_8px_rgba(16,185,129,0.5)]">
-              ОНГОИНГ
-            </span>
-          )}
-          {formatLabel && (
-            <span className="bg-black/70 backdrop-blur-sm text-white/70 text-[10px] font-semibold px-1.5 py-0.5 rounded-md leading-tight">
-              {formatLabel}
-            </span>
-          )}
-        </div>
-
-        {/* BOTTOM: episodes on hover */}
-        {epText && (
-          <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <span className="bg-black/70 backdrop-blur-sm text-white text-[10px] font-medium px-1.5 py-0.5 rounded-md">
-              {epText}
-            </span>
-          </div>
+        {/* TOP-RIGHT: a single status chip. Hairline ring for definition instead
+            of the coloured bloom the project bans. */}
+        {statusBadge && (
+          <span className={`absolute top-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-tight text-white ring-1 ring-inset shadow-[0_2px_6px_-2px_rgba(0,0,0,.8)] ${statusBadge.tone}`}>
+            {statusBadge.label}
+          </span>
         )}
       </div>
 
-      {/* Info — flex-1 fills remaining card height so mt-auto pins genres to bottom */}
+      {/* Info — flex-1 fills remaining card height so mt-auto pins meta to bottom */}
       <div className="pt-2.5 pb-1 px-0.5 flex flex-col flex-1 min-w-0">
         <h3 className="text-sm font-bold line-clamp-2 leading-snug text-[var(--text)] group-hover:text-[#c4b5fd] transition-colors duration-200" style={{ textWrap: "pretty" } as React.CSSProperties}>
           {title}
         </h3>
-        <div className="mt-auto pt-1.5 space-y-1">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {year && <span className="text-[11px] text-[var(--text3)] tabular-nums">{year}</span>}
-            {epText && <span className="text-[11px] text-[var(--text3)] tabular-nums">· {epText}</span>}
-          </div>
-          {genres && genres.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {genres.slice(0, 2).map(g => (
-                <span key={g} className="text-[10px] text-[var(--text3)] bg-[var(--surface3)] rounded px-1.5 py-0.5">
-                  {g}
-                </span>
-              ))}
-            </div>
+        {/* Two quiet lines instead of a line of text plus a row of chip boxes.
+            At 10px inside a padded box the genre chips were barely legible and
+            wrapped to two rows on phones, leaving neighbouring cards ragged. */}
+        <div className="mt-auto pt-1.5 space-y-0.5 text-[11px] leading-tight text-[var(--text3)]">
+          {meta.length > 0 && (
+            <p className="tabular-nums truncate">{meta.join(" · ")}</p>
           )}
+          {genreLine && <p className="truncate">{genreLine}</p>}
         </div>
       </div>
     </Link>

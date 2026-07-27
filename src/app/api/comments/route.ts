@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
       user: {
         select: {
           id: true, name: true, image: true, profileFrame: true,
-          activeTitle: { select: { name: true, emoji: true, color: true, rarity: true } },
+          activeTitle: { select: { key: true, name: true, emoji: true, color: true, rarity: true } },
         },
       },
       likes: { select: { userId: true, type: true } },
@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
       user: {
         select: {
           id: true, name: true, image: true, profileFrame: true,
-          activeTitle: { select: { name: true, emoji: true, color: true, rarity: true } },
+          activeTitle: { select: { key: true, name: true, emoji: true, color: true, rarity: true } },
         },
       },
     },

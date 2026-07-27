@@ -24,8 +24,6 @@ model User {
   profileFrame  String    @default("default")
   xp            Int       @default(0)
   activeTitleId String?
-  questStreak   Int       @default(0)
-  lastQuestDate DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -39,8 +37,6 @@ model User {
   commentLikes  CommentLike[]
   activeTitle   Title?        @relation("UserActiveTitle", fields: [activeTitleId], references: [id])
   titles        UserTitle[]
-  weeklyScores  WeeklyScore[]
-  questProgress UserQuestProgress[]
 
   @@map("users")
 }
@@ -294,66 +290,4 @@ model NewsPost {
   updatedAt   DateTime @updatedAt
 
   @@map("news_posts")
-}
-
-// ── Weekly competition ─────────────────────────────────────────────
-// One row per user per competition week. `weekStart` is the UTC instant of
-// Monday 00:00 MSK (see src/lib/competition.ts). The board "resets" implicitly:
-// a new week uses a new weekStart, so prior rows drop out of the current-week
-// query while remaining as history. Unique (userId, weekStart) makes upserts safe.
-model WeeklyScore {
-  id              String   @id @default(cuid())
-  userId          String
-  weekStart       DateTime
-  xpGained        Int      @default(0)
-  episodesWatched Int      @default(0)
-  questsCompleted Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, weekStart])
-  @@index([weekStart, xpGained])
-  @@index([weekStart, episodesWatched])
-  @@map("weekly_scores")
-}
-
-// ── Daily quests ───────────────────────────────────────────────────
-// Quest definitions are seeded/upserted by key (see src/lib/quests.ts).
-model Quest {
-  id          String   @id @default(cuid())
-  key         String   @unique
-  title       String
-  description String
-  type        String   // WATCH_EPISODE | RATE | FAVORITE | COMMENT
-  targetCount Int      @default(1)
-  xpReward    Int      @default(20)
-  emoji       String   @default("🎯")
-  sortOrder   Int      @default(0)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-
-  progress UserQuestProgress[]
-
-  @@map("quests")
-}
-
-// Per-user, per-quest, per-day progress. `date` is the UTC instant of the MSK
-// day bucket (midnight MSK). Unique (userId, questId, date) gives daily reset.
-model UserQuestProgress {
-  id        String    @id @default(cuid())
-  userId    String
-  questId   String
-  date      DateTime
-  progress  Int       @default(0)
-  completed Boolean   @default(false)
-  claimedAt DateTime?
-
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  quest Quest @relation(fields: [questId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, questId, date])
-  @@index([userId, date])
-  @@map("user_quest_progress")
 }

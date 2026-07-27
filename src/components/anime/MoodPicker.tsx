@@ -76,31 +76,58 @@ export function MoodPicker() {
   const [active, setActive] = useState<MoodId | null>(null)
   const [results, setResults] = useState<AnimeResult[]>([])
   const [loading, setLoading] = useState(false)
+  const [failed, setFailed] = useState(false)
   const resultsRef = useRef<HTMLDivElement>(null)
   const cache = useRef<Partial<Record<MoodId, AnimeResult[]>>>({})
 
+  // globals.css neutralises CSS transitions under reduced motion, but
+  // programmatic smooth scrolling is a JS API it can't reach.
+  function revealResults() {
+    setTimeout(() => {
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      resultsRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' })
+    }, 50)
+  }
+
   async function pick(id: MoodId) {
-    if (active === id) { setActive(null); setResults([]); return }
+    if (active === id) { setActive(null); setResults([]); setFailed(false); return }
     setActive(id)
+    setFailed(false)
     if (cache.current[id]) {
       setResults(cache.current[id]!)
-      setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50)
+      revealResults()
       return
     }
     setLoading(true)
     setResults([])
-    const res = await fetch(`/api/mood?mood=${id}`)
-    const data: AnimeResult[] = await res.json()
-    cache.current[id] = data
-    setResults(data)
-    setLoading(false)
-    setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50)
+    try {
+      const res = await fetch(`/api/mood?mood=${id}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data: AnimeResult[] = await res.json()
+      // Never cache an empty answer — an upstream hiccup would stick for the
+      // whole session.
+      if (data.length) cache.current[id] = data
+      setResults(data)
+    } catch {
+      // Without this the skeleton spun forever on any network/API failure.
+      setResults([])
+      setFailed(true)
+    } finally {
+      setLoading(false)
+      revealResults()
+    }
   }
 
   const activeMood = MOODS.find(m => m.id === active)
 
+  // The declared string[] was a lie: JSON.parse returns any, so a payload like
+  // '"abc"' would slice to a *string*, escape the catch, and then blow up on
+  // .join() at the call site. Verify it's actually an array.
   function parseGenres(raw: string): string[] {
-    try { return JSON.parse(raw).slice(0, 2) } catch { return [] }
+    try {
+      const parsed: unknown = JSON.parse(raw)
+      return Array.isArray(parsed) ? (parsed as string[]).slice(0, 2) : []
+    } catch { return [] }
   }
 
   return (
@@ -113,7 +140,8 @@ export function MoodPicker() {
             <button
               key={m.id}
               onClick={() => pick(m.id)}
-              className="relative overflow-hidden rounded-2xl text-left transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
+              aria-pressed={isActive}
+              className="relative overflow-hidden rounded-2xl text-left transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
               style={{
                 background: m.bg,
                 boxShadow: isActive ? `0 0 0 2px ${m.accent}, 0 8px 32px ${m.glow}` : `0 2px 12px rgba(0,0,0,0.4)`,
@@ -162,7 +190,7 @@ export function MoodPicker() {
               <activeMood.Icon size={14} style={{ color: activeMood.accent }} />
               <span className="font-medium" style={{ color: activeMood.accent }}>{activeMood.label}</span>
               <span className="text-gray-500">—</span>
-              <span>{results.length} аниме</span>
+              <span className="tabular-nums">{results.length} аниме</span>
             </p>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3">
               {results.map(a => (
@@ -194,7 +222,9 @@ export function MoodPicker() {
 
         {!loading && active && results.length === 0 && (
           <p className="mt-6 text-sm text-gray-500 text-center py-8">
-            Ничего не нашлось — каталог ещё заполняется
+            {failed
+              ? 'Не удалось загрузить подборку — попробуйте ещё раз'
+              : 'Под это настроение ничего не нашлось'}
           </p>
         )}
       </div>

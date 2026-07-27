@@ -12,7 +12,7 @@ import { stickerToken } from "@/lib/stickers";
 
 interface CommentUser {
   id: string; name: string | null; image: string | null; profileFrame?: string | null;
-  activeTitle?: { name: string; emoji: string; color: string; rarity: string } | null;
+  activeTitle?: { key: string; name: string; emoji: string; color: string; rarity: string } | null;
 }
 interface Comment {
   id: string; text: string; status: string; createdAt: string;
@@ -276,6 +276,7 @@ export function CommentSection({ animeId }: { animeId: string }) {
                       emoji={c.user.activeTitle.emoji}
                       color={c.user.activeTitle.color}
                       rarity={c.user.activeTitle.rarity}
+                      titleKey={c.user.activeTitle.key}
                       size="sm"
                     />
                   )}

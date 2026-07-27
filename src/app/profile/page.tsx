@@ -12,10 +12,10 @@ import Image from "next/image";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { FrameSelector } from "@/components/profile/FrameSelector";
 import { TitlesShowcase } from "@/components/profile/TitlesShowcase";
-import { StickerShowcase } from "@/components/profile/StickerShowcase";
 import { WatchHistorySection } from "@/components/profile/WatchHistorySection";
 import { ProfileAccentPicker } from "@/components/profile/ProfileAccentPicker";
-import { Heart, Clock, Play, Film, Timer, Star, Sparkles, Target, Trophy, ChevronRight } from "lucide-react";
+import { TitleBadge } from "@/components/profile/TitleBadge";
+import { Heart, Clock, Play, Film, Timer, Star, Sparkles } from "lucide-react";
 import { calcLevel, levelProgress, getLevelInfo } from "@/lib/level";
 
 // Emerald / amber / orange, matching the AnimeCard rating scale.
@@ -144,17 +144,14 @@ export default async function ProfilePage() {
                 {levelInfo.title}
               </span>
               {activeTitle && (
-                <span
-                  className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border"
-                  style={{
-                    color: activeTitle.color,
-                    borderColor: `${activeTitle.color}50`,
-                    background: `${activeTitle.color}15`,
-                  }}
-                >
-                  <span>{activeTitle.emoji}</span>
-                  {activeTitle.name}
-                </span>
+                <TitleBadge
+                  name={activeTitle.name}
+                  emoji={activeTitle.emoji}
+                  color={activeTitle.color}
+                  rarity={activeTitle.rarity}
+                  titleKey={activeTitle.key}
+                  size="md"
+                />
               )}
             </div>
             <p className="text-sm text-[var(--text2)] mt-1">{user.email}</p>
@@ -188,6 +185,7 @@ export default async function ProfilePage() {
                 try { if (t.requiresAnime) requiresAnime = JSON.parse(t.requiresAnime); } catch { /* */ }
                 return {
                   id: t.id,
+                  key: t.key,
                   name: t.name,
                   emoji: t.emoji,
                   color: t.color,
@@ -206,12 +204,6 @@ export default async function ProfilePage() {
               isAdmin={user.role === "ADMIN"}
             />
 
-            <StickerShowcase
-              userLevel={level}
-              isPremium={user.isPremium}
-              isAdmin={user.role === "ADMIN"}
-            />
-
             {/* Stats */}
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
               {stats.map((stat) => (
@@ -224,36 +216,6 @@ export default async function ProfilePage() {
                   <div className="text-xs text-[var(--text2)] mt-0.5">{stat.label}</div>
                 </div>
               ))}
-            </div>
-
-            {/* Compete CTA — daily quests + weekly leaderboard */}
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Link
-                href="/quests"
-                className="group flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface2)] p-3.5 transition-colors hover:border-[rgba(139,92,246,.4)]"
-              >
-                <span className="grid place-items-center w-10 h-10 rounded-lg bg-[var(--accent)]/12 text-[var(--accent)] shrink-0">
-                  <Target size={18} />
-                </span>
-                <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-bold text-white">Ежедневные квесты</span>
-                  <span className="block text-xs text-[var(--text3)] mt-0.5">Выполняй дейлики и копи серию</span>
-                </span>
-                <ChevronRight size={16} className="text-[var(--text3)] group-hover:text-white transition-colors" />
-              </Link>
-              <Link
-                href="/leaderboard"
-                className="group flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface2)] p-3.5 transition-colors hover:border-[rgba(245,158,11,.4)]"
-              >
-                <span className="grid place-items-center w-10 h-10 rounded-lg bg-[var(--gold)]/12 text-[var(--gold)] shrink-0">
-                  <Trophy size={18} />
-                </span>
-                <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-bold text-white">Недельный лидерборд</span>
-                  <span className="block text-xs text-[var(--text3)] mt-0.5">Соревнуйся и получай награды</span>
-                </span>
-                <ChevronRight size={16} className="text-[var(--text3)] group-hover:text-white transition-colors" />
-              </Link>
             </div>
 
             {/* Favourite genres */}

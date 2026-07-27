@@ -4,6 +4,7 @@ import { getByGenre, animePoster, animeSlug, animeTitle, animeYear, animeEpisode
 import { AnimeCard } from "@/components/anime/AnimeCard";
 import Link from "next/link";
 import { BackButton } from "@/components/ui/BackButton";
+import { jsonLdHtml } from "@/lib/jsonld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://kurox.ru";
 
@@ -60,7 +61,7 @@ export default async function GenrePage({ params, searchParams }: PageProps) {
     <div className="max-w-[1400px] mx-auto px-4 py-8">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(breadcrumbSchema) }}
       />
 
       <div className="mb-6">

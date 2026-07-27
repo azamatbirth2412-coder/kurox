@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { advanceQuestSafe, addWeeklyScoreSafe } from "@/lib/quests";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -40,15 +39,6 @@ export async function POST(req: NextRequest) {
       where: { id: userId },
       data: { xp: { increment: 10 } },
     });
-
-    // Weekly competition + daily quests. The client's persistedRef already
-    // dedupes POSTs, and this only runs when the episode is newly recorded
-    // (`!existing`), so it can't be spammed. Kept fire-and-forget so a quest
-    // failure never breaks history recording.
-    await Promise.all([
-      addWeeklyScoreSafe(userId, { xp: 10, episodes: 1 }),
-      advanceQuestSafe(userId, "WATCH_EPISODE", 1),
-    ]);
 
     // Auto-award titles linked to this anime
     if (slug) {

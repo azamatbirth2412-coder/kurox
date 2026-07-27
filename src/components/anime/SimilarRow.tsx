@@ -30,7 +30,10 @@ export function SimilarRow({ items }: { items: SimilarAnime[] }) {
   const scroll = (dir: "left" | "right") => {
     const el = rowRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir === "right" ? 600 : -600, behavior: "smooth" });
+    // globals.css neutralises CSS transitions under reduced motion, but
+    // programmatic smooth scrolling is a JS API it can't reach.
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollBy({ left: dir === "right" ? 600 : -600, behavior: reduced ? "auto" : "smooth" });
   };
 
   // Nicer empty state instead of rendering nothing.
@@ -49,14 +52,14 @@ export function SimilarRow({ items }: { items: SimilarAnime[] }) {
       {/* Scroll buttons */}
       <button
         onClick={() => scroll("left")}
-        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 w-9 h-9 rounded-full bg-[var(--surface)] border border-[var(--border)] shadow-xl flex items-center justify-center text-[var(--text2)] hover:text-white hover:border-[var(--accent)]/50 transition-[color,border-color,opacity] duration-200 opacity-0 group-hover/row:opacity-100 disabled:opacity-0"
+        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 w-9 h-9 rounded-full bg-[var(--surface)] border border-[var(--border)] shadow-xl flex items-center justify-center text-[var(--text2)] hover:text-white hover:border-[var(--accent)]/50 transition-[color,border-color,opacity] duration-200 opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-0"
         aria-label="Назад"
       >
         <ChevronLeft size={18} />
       </button>
       <button
         onClick={() => scroll("right")}
-        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 w-9 h-9 rounded-full bg-[var(--surface)] border border-[var(--border)] shadow-xl flex items-center justify-center text-[var(--text2)] hover:text-white hover:border-[var(--accent)]/50 transition-[color,border-color,opacity] duration-200 opacity-0 group-hover/row:opacity-100"
+        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 w-9 h-9 rounded-full bg-[var(--surface)] border border-[var(--border)] shadow-xl flex items-center justify-center text-[var(--text2)] hover:text-white hover:border-[var(--accent)]/50 transition-[color,border-color,opacity] duration-200 opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         aria-label="Вперёд"
       >
         <ChevronRight size={18} />

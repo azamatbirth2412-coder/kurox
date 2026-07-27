@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 const CDN = "https://anilibria.top";
 const ALLOWED_HOSTS = ["anilibria.top", "libria.fun"];
@@ -17,40 +18,74 @@ function toProxied(raw: string | null): string | null {
   return `/api/proxy/hls?url=${encodeURIComponent(abs)}`;
 }
 
-// Generates an HLS master playlist that lists all available quality variants.
-// HLS.js uses this to do true Adaptive Bitrate (ABR) — automatically switching
-// quality based on measured download speed.
+function getIp(req: NextRequest): string {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
+
+// ── Declared bitrates ───────────────────────────────────────────────────────
+// MEASURED from live Anilibria renditions (14 segments sampled across a full
+// 24-min episode, ~10 s segments):
+//     1080p  peak 5.75 Mbps · avg 2.84 Mbps
+//      720p  peak 2.91 Mbps · avg 1.41 Mbps
+//      480p  peak 1.34 Mbps · avg 0.73 Mbps
+//
+// These numbers are load-bearing, not decoration. hls.js picks a level with
+// `adjustedBw >= level.maxBitrate` (BANDWIDTH) while the buffer is short and
+// `>= level.averageBitrate` (AVERAGE-BANDWIDTH) once it is healthy. The old
+// playlist declared 1080p at 8 Mbps with no AVERAGE-BANDWIDTH, so ABR needed
+// ~11.4 Mbps of measured throughput before it would ever choose 1080p — a
+// stream that actually averages 2.84 Mbps. Everyone below a very fast line was
+// pinned to 720p or 480p forever. Keep BANDWIDTH ≈ measured peak and
+// AVERAGE-BANDWIDTH ≈ measured average; do not "round up for safety".
+const VARIANTS = [
+  { key: "hls_1080", bandwidth: 6_000_000, average: 3_000_000, res: "1920x1080", name: "1080" },
+  { key: "hls_720",  bandwidth: 3_000_000, average: 1_500_000, res: "1280x720",  name: "720"  },
+  { key: "hls_480",  bandwidth: 1_400_000, average:   800_000, res: "854x480",   name: "480"  },
+] as const;
+
+// Generates an HLS master playlist listing every available quality variant so
+// hls.js can do true Adaptive Bitrate switching, and so a manual quality pick
+// is a level switch on the *same* stream (no reload, no lost buffer, no seek).
 export async function GET(req: NextRequest) {
+  if (!rateLimit(`master:${getIp(req)}`, 120, 5 * 60 * 1000)) {
+    return new NextResponse("Too Many Requests", {
+      status: 429,
+      headers: { "Retry-After": "60" },
+    });
+  }
+
   const p = req.nextUrl.searchParams;
-  const p480  = toProxied(p.get("hls_480"));
-  const p720  = toProxied(p.get("hls_720"));
-  const p1080 = toProxied(p.get("hls_1080"));
+  const lines: string[] = ["#EXTM3U", "#EXT-X-VERSION:6", ""];
+  let count = 0;
 
-  if (!p480 && !p720 && !p1080) {
+  // Highest first: hls.js sorts levels by height internally, but the first
+  // entry in the manifest becomes `hls.firstLevel` — the fallback used when ABR
+  // cannot pick. Falling back to the best rendition beats falling back to 480p.
+  for (const v of VARIANTS) {
+    const url = toProxied(p.get(v.key));
+    if (!url) continue;
+    lines.push(
+      `#EXT-X-STREAM-INF:BANDWIDTH=${v.bandwidth},AVERAGE-BANDWIDTH=${v.average},RESOLUTION=${v.res},NAME="${v.name}"`,
+    );
+    lines.push(url);
+    count++;
+  }
+
+  if (count === 0) {
     return NextResponse.json({ error: "no valid streams" }, { status: 400 });
-  }
-
-  const lines: string[] = ["#EXTM3U", "#EXT-X-VERSION:3", ""];
-
-  // Order: highest bitrate first (HLS.js starts from best and drops if needed)
-  if (p1080) {
-    lines.push(`#EXT-X-STREAM-INF:BANDWIDTH=8000000,RESOLUTION=1920x1080,NAME="1080"`);
-    lines.push(p1080);
-  }
-  if (p720) {
-    lines.push(`#EXT-X-STREAM-INF:BANDWIDTH=3000000,RESOLUTION=1280x720,NAME="720"`);
-    lines.push(p720);
-  }
-  if (p480) {
-    lines.push(`#EXT-X-STREAM-INF:BANDWIDTH=1500000,RESOLUTION=854x480,NAME="480"`);
-    lines.push(p480);
   }
 
   return new NextResponse(lines.join("\n"), {
     headers: {
       "Content-Type": "application/vnd.apple.mpegurl",
       "Access-Control-Allow-Origin": "*",
-      "Cache-Control": "no-cache",
+      // Deterministic function of the query string, and the query carries
+      // per-viewer tokens — cache in the browser only.
+      "Cache-Control": "private, max-age=300",
     },
   });
 }

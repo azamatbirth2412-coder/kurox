@@ -2,13 +2,16 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Award, Lock, Loader2, Check, ChevronDown, ExternalLink, Sparkles, Crown, Gem, Star, Shield } from "lucide-react";
 import Link from "next/link";
 import { RARITY } from "@/lib/rarity";
+import { MYTHIC_TITLE_KEY } from "./TitleBadge";
+import { TitleBg } from "./TitleBackgrounds";
 
 interface AnimeReq { slug: string; name: string; episodes: number }
 interface ShowcaseTitle {
-  id: string; name: string; emoji: string; color: string; rarity: string;
+  id: string; key: string; name: string; emoji: string; color: string; rarity: string;
   description: string | null; animeSlug: string | null; animeTitle: string | null;
   minEpisodes: number; totalEpisodes: number; requiresAnime: AnimeReq[] | null;
   animated: boolean; earned: boolean;
@@ -53,81 +56,6 @@ function RequirementsBlock({ title }: { title: ShowcaseTitle }) {
 
 // ── Rarity-specific SVG decorations ─────────────────────────────────────────
 
-function LegendaryBg({ color, uid }: { color: string; uid: string }) {
-  return (
-    <svg viewBox="0 0 200 200" style={{ position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none" }} aria-hidden>
-      <defs>
-        <radialGradient id={`lg1-${uid}`} cx="50%" cy="30%"><stop offset="0%" stopColor={color} stopOpacity=".35"/><stop offset="100%" stopColor={color} stopOpacity="0"/></radialGradient>
-        <radialGradient id={`lg2-${uid}`} cx="80%" cy="80%"><stop offset="0%" stopColor={color} stopOpacity=".2"/><stop offset="100%" stopColor={color} stopOpacity="0"/></radialGradient>
-      </defs>
-      <rect width="200" height="200" fill={`url(#lg1-${uid})`}/>
-      <circle cx="160" cy="160" r="80" fill={`url(#lg2-${uid})`}/>
-      {/* Crown outline */}
-      <path d="M70 140 L70 105 L90 118 L100 95 L110 118 L130 105 L130 140 Z" fill="none" stroke={color} strokeWidth="1.5" strokeOpacity=".3"/>
-      {/* Stars */}
-      {[[28,32],[170,28],[18,140],[182,155],[100,170]].map(([cx,cy],i)=>(
-        <circle key={i} cx={cx} cy={cy} r={i===4?2:1.5} fill={color} fillOpacity={.5+i*.05}/>
-      ))}
-      {[[55,60],[145,50],[35,110],[165,100]].map(([cx,cy],i)=>(
-        <circle key={i} cx={cx} cy={cy} r={1} fill={color} fillOpacity={.4}/>
-      ))}
-      {/* Large crown center glow */}
-      <circle cx="100" cy="118" r="32" fill={color} fillOpacity=".08"/>
-    </svg>
-  );
-}
-
-function EpicBg({ color, uid }: { color: string; uid: string }) {
-  return (
-    <svg viewBox="0 0 200 200" style={{ position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none" }} aria-hidden>
-      <defs>
-        <radialGradient id={`ep1-${uid}`} cx="50%" cy="50%"><stop offset="0%" stopColor={color} stopOpacity=".3"/><stop offset="100%" stopColor={color} stopOpacity="0"/></radialGradient>
-      </defs>
-      <rect width="200" height="200" fill={`url(#ep1-${uid})`}/>
-      {/* Diamond */}
-      <path d="M100 60 L128 100 L100 148 L72 100 Z" fill="none" stroke={color} strokeWidth="1.5" strokeOpacity=".35"/>
-      <path d="M100 75 L118 100 L100 130 L82 100 Z" fill={color} fillOpacity=".12"/>
-      {/* Hex lines */}
-      {[30,60,90,120,150].map((y,i)=>(
-        <line key={i} x1="0" y1={y} x2="200" y2={y} stroke={color} strokeWidth=".6" strokeOpacity=".1"/>
-      ))}
-      {[30,60,90,120,150,180].map((x,i)=>(
-        <line key={i} x1={x} y1="0" x2={x} y2="200" stroke={color} strokeWidth=".6" strokeOpacity=".1"/>
-      ))}
-    </svg>
-  );
-}
-
-function RareBg({ color, uid }: { color: string; uid: string }) {
-  return (
-    <svg viewBox="0 0 200 200" style={{ position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none" }} aria-hidden>
-      <defs>
-        <radialGradient id={`rr1-${uid}`} cx="30%" cy="60%"><stop offset="0%" stopColor={color} stopOpacity=".28"/><stop offset="100%" stopColor={color} stopOpacity="0"/></radialGradient>
-      </defs>
-      <rect width="200" height="200" fill={`url(#rr1-${uid})`}/>
-      {/* Crystal */}
-      <polygon points="100,55 120,90 100,130 80,90" fill="none" stroke={color} strokeWidth="1.5" strokeOpacity=".35"/>
-      <polygon points="100,70 113,92 100,115 87,92" fill={color} fillOpacity=".12"/>
-      {/* Orbit rings */}
-      <ellipse cx="100" cy="100" rx="55" ry="20" fill="none" stroke={color} strokeWidth="1" strokeOpacity=".2" strokeDasharray="4 6"/>
-      <ellipse cx="100" cy="100" rx="30" ry="55" fill="none" stroke={color} strokeWidth="1" strokeOpacity=".2" strokeDasharray="4 6"/>
-    </svg>
-  );
-}
-
-function CommonBg({ color, uid }: { color: string; uid: string }) {
-  return (
-    <svg viewBox="0 0 200 200" style={{ position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none" }} aria-hidden>
-      <defs>
-        <radialGradient id={`cm1-${uid}`} cx="50%" cy="40%"><stop offset="0%" stopColor={color} stopOpacity=".2"/><stop offset="100%" stopColor={color} stopOpacity="0"/></radialGradient>
-      </defs>
-      <rect width="200" height="200" fill={`url(#cm1-${uid})`}/>
-      <circle cx="100" cy="95" r="38" fill="none" stroke={color} strokeWidth="1.2" strokeOpacity=".25"/>
-      <circle cx="100" cy="95" r="24" fill="none" stroke={color} strokeWidth=".8" strokeOpacity=".15"/>
-    </svg>
-  );
-}
-
 function LockedBg() {
   return (
     <svg viewBox="0 0 200 200" style={{ position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none" }} aria-hidden>
@@ -153,6 +81,9 @@ function TitleCard({ title, isActive, isSaving, claimState, claimError, onEquip,
   const { r, g, b } = hexToRgb(title.color);
   const rgb = `${r},${g},${b}`;
 
+  // The single final title outranks its own rarity tier visually — it keeps the
+  // legendary card layout but swaps the gold trim for the holographic ring.
+  const isMythic = title.key === MYTHIC_TITLE_KEY;
   const isLeg = title.rarity === "legendary";
   const isEpic = title.rarity === "epic";
   const isRare = title.rarity === "rare";
@@ -195,11 +126,12 @@ function TitleCard({ title, isActive, isSaving, claimState, claimError, onEquip,
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      className={isMythic && title.earned ? "title-card-mythic" : undefined}
       style={{
         borderRadius: 18, overflow: "hidden",
         display: "flex", flexDirection: "column",
         position: "relative",
-        border: `1.5px solid ${borderColor}`,
+        border: `1.5px solid ${isMythic && title.earned ? "transparent" : borderColor}`,
         background: bgBase,
         boxShadow: glowShadow,
         transform: hovered ? "translateY(-4px) scale(1.02)" : "translateY(0) scale(1)",
@@ -210,10 +142,7 @@ function TitleCard({ title, isActive, isSaving, claimState, claimError, onEquip,
     >
       {/* SVG decorative background — always shown, dimmed when locked */}
       <div style={{ opacity: (title.earned || isAdmin) ? 1 : 0.75, position:"absolute", inset:0 }}>
-        {isLeg  ? <LegendaryBg color={title.color} uid={title.id}/>
-        : isEpic ? <EpicBg    color={title.color} uid={title.id}/>
-        : isRare ? <RareBg    color={title.color} uid={title.id}/>
-        :          <CommonBg  color={title.color} uid={title.id}/>}
+        <TitleBg titleKey={title.key} color={title.color} uid={title.id}/>
       </div>
 
       {/* Shimmer for earned legendary */}
@@ -409,6 +338,7 @@ function TitleCard({ title, isActive, isSaving, claimState, claimError, onEquip,
 
 export function TitlesShowcase({ allTitles, activeTitleId, isAdmin }: TitlesShowcaseProps) {
   const { update: updateSession } = useSession();
+  const router = useRouter();
   const [activeId, setActiveId] = useState<string|null>(activeTitleId);
   const [savingId, setSavingId] = useState<string|null>(null);
   const [claimStates, setClaimStates] = useState<Record<string,"idle"|"loading"|"success"|"error">>({});
@@ -436,6 +366,9 @@ export function TitlesShowcase({ allTitles, activeTitleId, isAdmin }: TitlesShow
       if (!res.ok) { const d = await res.json().catch(()=>({})); setGlobalError(d.error || "Ошибка"); return; }
       setActiveId(next);
       await updateSession(); // обновляем сессию чтобы шапка сайта показала новый титул
+      // Плашка рядом с ником рендерится на сервере — без этого она не появится
+      // до ручной перезагрузки страницы.
+      router.refresh();
     } catch { setGlobalError("Ошибка соединения"); }
     finally { setSavingId(null); }
   }

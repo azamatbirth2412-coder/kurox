@@ -44,6 +44,25 @@
   --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* ── Type scale ──
+     Only the two sizes that actually need to respond to viewport are fluid.
+     Everything else stays on Tailwind's fixed steps so the UI doesn't wobble. */
+  --text-hero:    clamp(2rem, 1.15rem + 3.4vw, 3rem);          /* 32 → 48 */
+  --text-section: clamp(1.1875rem, 1.1rem + 0.35vw, 1.375rem); /* 19 → 22 */
+
+  /* ── Vertical rhythm ──
+     Three steps only: between sections, head→content, and inside a block.
+     A section head sits 3× closer to its own content than to the next
+     section, so proximity — not rules or boxes — does the grouping. */
+  --gap-section:   3rem;    /* 48 */
+  --gap-section-lg: 4rem;   /* 64 */
+  --gap-head:      1rem;    /* 16 */
+  --gap-head-lg:   1.25rem; /* 20 */
+
+  /* Smallest comfortable target. Used as min-height/min-width on controls
+     whose visible box would otherwise be smaller than the finger. */
+  --tap: 40px;
 }
 
 @theme inline {
@@ -109,18 +128,32 @@ h1, h2, h3 { text-wrap: balance; }
 }
 
 /* ── Card hover lift ──
-   Directional depth (soft, offset down) + a thin accent ring reads more
-   premium than an all-around neon bloom. Scoped transitions, token easing. */
+   The lift belongs to the whole card, but the depth belongs to the POSTER.
+   Ringing the entire link (poster + title + meta) drew a box around a lot of
+   empty space and had no edge to hug; scoping the ring to the image means it
+   follows the poster's own 12px radius and reads as the image lifting off the
+   page. Directional shadow, never an all-around bloom. */
 .card-hover {
-  transition: transform .35s var(--ease-out), box-shadow .35s var(--ease-out);
+  transition: transform .3s var(--ease-out);
   will-change: transform;
 }
-.card-hover:hover {
-  transform: translateY(-6px);
+.card-hover:hover { transform: translateY(-5px); }
+
+.card-poster {
+  transition: box-shadow .3s var(--ease-out);
+}
+.card-hover:hover .card-poster,
+.card-hover:focus-visible .card-poster {
   box-shadow:
-    0 18px 34px -14px rgba(0,0,0,.75),
-    0 6px 16px -8px rgba(139,92,246,.35),
-    0 0 0 1px rgba(139,92,246,.28);
+    0 16px 30px -14px rgba(0,0,0,.8),
+    0 5px 14px -8px rgba(139,92,246,.4),
+    0 0 0 1px rgba(139,92,246,.45);
+}
+/* The focus ring wraps poster + text, so it needs a radius of its own —
+   the global 8px was visibly tighter than the card it was tracing. */
+.card-hover:focus-visible {
+  border-radius: 16px;
+  outline-offset: 4px;
 }
 @media (prefers-reduced-motion: reduce) {
   .card-hover:hover { transform: none; }
@@ -309,19 +342,44 @@ html[data-tv="true"][data-gamepad="true"] :focus {
   50%       { opacity: 1; }
 }
 
-/* ===== Title badges ===== */
-@keyframes titleGoldGlow {
-  0%, 100% { box-shadow: 0 0 6px rgba(245, 158, 11, 0.35); }
-  50%       { box-shadow: 0 0 16px rgba(245, 158, 11, 0.65), 0 0 32px rgba(245, 158, 11, 0.25); }
+/* ===== Title badges =====
+   Every tier animates in the title's OWN colour: TitleBadge sets --tc-soft /
+   --tc-strong inline from the title's hex, so a crimson legendary glows
+   crimson instead of the old hard-coded gold. Tiers differ by tempo and by
+   which extras they layer on. */
+@keyframes titleAuraPulse {
+  0%, 100% { box-shadow: 0 0 6px var(--tc-soft); }
+  50%       { box-shadow: 0 0 16px var(--tc-strong), 0 0 30px var(--tc-soft); }
 }
 @keyframes titleShimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -100% 0; }
 }
+/* Slow, barely-there breath. */
+.title-badge-rare {
+  animation: titleAuraPulse 4s ease-in-out infinite;
+}
+/* Quicker pulse plus a thin sweep, so epics read a step above rare. */
+.title-badge-epic {
+  position: relative;
+  overflow: hidden;
+  animation: titleAuraPulse 2.8s ease-in-out infinite;
+}
+.title-badge-epic::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(105deg, transparent 44%, rgba(255, 255, 255, 0.12) 50%, transparent 56%);
+  background-size: 250% 100%;
+  animation: titleShimmer 4.2s linear infinite;
+  pointer-events: none;
+}
+/* Strongest aura + a brighter, faster sweep. */
 .title-badge-legendary {
   position: relative;
   overflow: hidden;
-  animation: titleGoldGlow 2.4s ease-in-out infinite;
+  animation: titleAuraPulse 2.2s ease-in-out infinite;
 }
 .title-badge-legendary::after {
   content: "";
@@ -399,10 +457,75 @@ html[data-tv="true"][data-gamepad="true"] :focus {
 }
 .rarity-legendary-glow-anim { animation: rarityGlowPulse 2.4s ease-in-out infinite; }
 
+/* ===== Mythic — reserved for the single final title =====
+   Deliberately unlike the gold legendary treatment: a rotating holographic
+   ring plus a slow hue drift, so the last badge reads as its own tier. */
+@keyframes mythicSpin {
+  to { transform: rotate(1turn); }
+}
+@keyframes mythicHue {
+  0%, 100% { filter: hue-rotate(0deg); }
+  50%       { filter: hue-rotate(40deg); }
+}
+.title-badge-mythic {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  animation: mythicHue 6s ease-in-out infinite;
+}
+/* Rotating conic ring, masked to a hairline border. */
+.title-badge-mythic::before {
+  content: "";
+  position: absolute;
+  inset: -60%;
+  background: conic-gradient(
+    from 0deg,
+    #f472b6, #a855f7, #38bdf8, #2dd4bf, #facc15, #f472b6
+  );
+  animation: mythicSpin 4s linear infinite;
+  pointer-events: none;
+  z-index: -2;
+}
+/* Inner fill punched out of the ring, leaving only the rim visible. */
+.title-badge-mythic::after {
+  content: "";
+  position: absolute;
+  inset: 1.5px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #1a1030, #0d0a1a);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Card-sized counterpart of the mythic ring, for the showcase grid. */
+.title-card-mythic::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from 0deg,
+    #f472b6, #a855f7, #38bdf8, #2dd4bf, #facc15, #f472b6
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: mythicSpin 6s linear infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .title-anim::before { display: none; }
   .title-badge-legendary { animation: none; }
   .title-badge-legendary::after { animation: none; }
   .rarity-legendary-border::after { animation: none; opacity: 0.85; }
   .rarity-legendary-glow-anim { animation: none; opacity: 0.6; }
+  .title-badge-mythic { animation: none; }
+  .title-badge-mythic::before { animation: none; }
+  .title-card-mythic::before { animation: none; }
+  .title-badge-rare { animation: none; box-shadow: 0 0 8px var(--tc-soft); }
+  .title-badge-epic { animation: none; box-shadow: 0 0 10px var(--tc-soft); }
+  .title-badge-epic::after { animation: none; }
 }
