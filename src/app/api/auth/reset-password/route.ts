@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { clientIp } from "@/lib/client-ip";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { rateLimitAsync } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const ip = clientIp(req);
     // Brute-force guard for the 6-digit code: 5 attempts / 10 min per IP
     if (!(await rateLimitAsync(`reset-pw:${ip}`, 5, 10 * 60_000))) {
       return NextResponse.json(

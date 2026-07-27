@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
+import { clientIp } from "@/lib/client-ip";
 
 // Per-route rate limits: [prefix, max requests, window ms]
 const ROUTE_LIMITS: [string, number, number][] = [
@@ -14,11 +15,7 @@ const ROUTE_LIMITS: [string, number, number][] = [
 ];
 
 function getIp(req: NextRequest): string {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown"
-  );
+  return clientIp(req);
 }
 
 // In-memory brute-force protection for admin routes

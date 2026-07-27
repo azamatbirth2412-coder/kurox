@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { clientIp } from "@/lib/client-ip";
 
 // Edge Runtime: streaming responses are NOT subject to the 60s serverless timeout.
 // CPU time limit is 25s, but network I/O (fetching segments) doesn't count against it.
@@ -53,10 +54,7 @@ async function fetchChecked(url: string): Promise<Response> {
 }
 
 export async function GET(req: NextRequest) {
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown";
+  const ip = clientIp(req);
 
   // Each request streams a whole episode with BATCH parallel upstream fetches,
   // so the amplification factor per request is large. Keep the ceiling low.
