@@ -479,13 +479,20 @@ export default async function LeaderboardPage() {
           color: var(--text3); text-transform: uppercase;
         }
 
-        /* ── Sticky bottom bar ── */
+        /* ── Sticky bottom bar ──
+           Sits above BottomNav (58px, plus the safe-area inset) below lg,
+           where that nav is fixed to the true viewport bottom instead. */
         .lb-mybar {
-          position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+          position: fixed;
+          bottom: calc(58px + env(safe-area-inset-bottom));
+          left: 0; right: 0; z-index: 45;
           background: rgba(13,12,17,.96);
           backdrop-filter: blur(24px) saturate(1.5);
           -webkit-backdrop-filter: blur(24px) saturate(1.5);
           border-top: 1px solid var(--border);
+        }
+        @media (min-width: 1024px) {
+          .lb-mybar { bottom: 0; }
         }
         .lb-mybar-inner {
           max-width: 900px; margin: 0 auto;

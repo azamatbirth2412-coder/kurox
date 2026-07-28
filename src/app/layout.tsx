@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { Providers } from "@/components/Providers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { TVMode } from "@/components/TVMode";
 import { jsonLdHtml } from "@/lib/jsonld";
 
@@ -119,8 +120,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <TVMode />
         <Providers session={session}>
           <Header />
-          <main className="flex-1">{children}</main>
+          {/* pb reserves room for the fixed BottomNav below lg, so the last
+              row of a page (or the footer) never sits under it. */}
+          <main className="flex-1 pb-[58px] lg:pb-0">{children}</main>
           <Footer />
+          <BottomNav />
         </Providers>
       </body>
     </html>

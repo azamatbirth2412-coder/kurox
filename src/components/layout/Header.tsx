@@ -191,6 +191,13 @@ export function Header() {
               <button
                 onMouseEnter={() => setActiveDropdown("catalog")}
                 onMouseLeave={() => setActiveDropdown(null)}
+                // Always opens (never toggles) — touch browsers fire a synthetic
+                // mouseenter immediately before click, so by the time onClick
+                // runs the dropdown is already open via hover; a toggle would
+                // read that as "close it" and the menu would never stay open.
+                // Tapping outside already closes it (see the document click
+                // listener below), so a tap-to-close isn't needed here.
+                onClick={() => setActiveDropdown("catalog")}
                 className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeDropdown === "catalog" || pathname.startsWith("/anime")
                     ? "text-white bg-white/8"
@@ -233,6 +240,7 @@ export function Header() {
               <button
                 onMouseEnter={() => setActiveDropdown("genres")}
                 onMouseLeave={() => setActiveDropdown(null)}
+                onClick={() => setActiveDropdown("genres")}
                 className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeDropdown === "genres" ? "text-white bg-white/8" : "text-[var(--text2)] hover:text-white hover:bg-white/5"
                 }`}
