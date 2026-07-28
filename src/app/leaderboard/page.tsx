@@ -196,19 +196,39 @@ export default async function LeaderboardPage() {
           display: flex; flex-direction: column; align-items: center; gap: 7px;
           min-width: 0;
         }
+        /* Registered so the hue interpolates smoothly frame-to-frame instead of
+           jumping between fixed swatches — plain custom properties don't tween. */
+        @property --prize-hue {
+          syntax: '<number>';
+          inherits: true;
+          initial-value: 271;
+        }
+        @keyframes prizeHueShift {
+          0%   { --prize-hue: 0;   } /* red    */
+          33%  { --prize-hue: 132; } /* green  */
+          66%  { --prize-hue: 271; } /* violet */
+          100% { --prize-hue: 360; } /* red (loop) */
+        }
+        .lb-badge-shift {
+          animation: prizeHueShift 7s linear infinite;
+        }
         .lb-badge {
           position: relative; overflow: hidden;
           display: flex; align-items: stretch;
-          border: 1px solid; border-radius: 12px;
+          border: 1px solid hsl(var(--prize-hue) 72% 58% / .45);
+          border-radius: 12px;
           background: linear-gradient(168deg, #1d1a26, #131019);
-          /* Top inner highlight — the rim catches light like a physical chip. */
           box-shadow:
             inset 0 1px 0 rgba(255,255,255,.07),
-            0 8px 18px -12px rgba(0,0,0,.9);
+            0 8px 18px -12px rgba(0,0,0,.9),
+            0 0 22px -12px hsl(var(--prize-hue) 78% 55% / .55);
         }
         .lb-badge-ico {
           display: grid; place-items: center; flex-shrink: 0;
-          width: 38px; border-right: 1px solid;
+          width: 38px;
+          border-right: 1px solid hsl(var(--prize-hue) 72% 58% / .32);
+          background: linear-gradient(160deg, hsl(var(--prize-hue) 78% 55% / .3), hsl(var(--prize-hue) 78% 55% / .1));
+          color: hsl(var(--prize-hue) 90% 80%);
         }
         .lb-prize-col-1 .lb-badge-ico { width: 44px; }
         .lb-badge-text {
@@ -220,27 +240,32 @@ export default async function LeaderboardPage() {
         .lb-badge-name {
           font-weight: 700; font-size: 13.5px; letter-spacing: -.01em;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          color: hsl(var(--prize-hue) 88% 84%);
         }
         .lb-prize-col-1 .lb-badge-name { font-size: 15px; font-weight: 800; }
         .lb-badge-rank {
           font-weight: 800; font-size: 12.5px; flex-shrink: 0;
           font-variant-numeric: tabular-nums;
+          color: hsl(var(--prize-hue) 82% 72%);
         }
         .lb-prize-col-1 .lb-badge-rank { font-size: 14px; }
 
-        /* Winner reads first: a slightly warmer fill and a real rim, not a glow. */
+        /* Winner still reads first — a brighter rim and glow at the same hue,
+           not a different fixed colour, so the loop stays coherent across all three. */
         .lb-badge-1 {
-          background: linear-gradient(168deg, #26200e, #17130a);
+          background: linear-gradient(168deg, #241f27, #150f18);
           box-shadow:
             inset 0 1px 0 rgba(255,255,255,.1),
-            0 0 0 1px rgba(251,191,36,.18),
-            0 10px 22px -12px rgba(0,0,0,.95);
+            0 0 0 1px hsl(var(--prize-hue) 78% 62% / .6),
+            0 10px 22px -12px rgba(0,0,0,.95),
+            0 0 34px -8px hsl(var(--prize-hue) 82% 58% / .7);
         }
 
         .lb-prize-meta {
           font-size: 9px; font-weight: 700;
           letter-spacing: .14em; text-transform: uppercase;
           white-space: nowrap; /* two-line captions read as a layout bug */
+          color: hsl(var(--prize-hue) 65% 68% / .9);
         }
 
         @media (max-width: 620px) {
@@ -545,23 +570,21 @@ export default async function LeaderboardPage() {
             floodlight — the earlier full-bleed podium blocks shouted louder
             than anything else on the page. */}
         <div className="lb-prizes">
-          {([PRIZES_DATA[1], PRIZES_DATA[0], PRIZES_DATA[2]]).map(p => (
+          {([PRIZES_DATA[1], PRIZES_DATA[0], PRIZES_DATA[2]]).map((p, i) => (
             <div key={p.rank} className={`lb-prize-col lb-prize-col-${p.rank}`}>
-              <div className={`lb-badge lb-badge-${p.rank}`} style={{ borderColor: `${p.color}3d` }}>
-                {/* Icon compartment */}
-                <span className="lb-badge-ico" style={{
-                  background: `linear-gradient(160deg, ${p.color}30, ${p.color}12)`,
-                  borderRightColor: `${p.color}2e`,
-                  color: p.cx,
-                }}>
+              {/* Colour cycles red → green → violet on a loop instead of a
+                  fixed medal hue. Each badge is offset a third of the loop so
+                  the set shifts together like an aurora, never in lock-step. */}
+              <div className={`lb-badge lb-badge-${p.rank} lb-badge-shift`} style={{ animationDelay: `${-i * 2.3}s` }}>
+                <span className="lb-badge-ico">
                   {p.rank === 1 ? <Crown size={15} /> : <Medal size={14} />}
                 </span>
                 <span className="lb-badge-text">
-                  <span className="lb-badge-name" style={{ color: p.cx }}>{p.label}</span>
-                  <span className="lb-badge-rank" style={{ color: `${p.color}cc` }}>№{p.rank}</span>
+                  <span className="lb-badge-name">{p.label}</span>
+                  <span className="lb-badge-rank">№{p.rank}</span>
                 </span>
               </div>
-              <span className="lb-prize-meta" style={{ color: `${p.color}9e` }}>
+              <span className="lb-prize-meta lb-badge-shift" style={{ animationDelay: `${-i * 2.3}s` }}>
                 {p.rarity} · сезонный титул
               </span>
             </div>
