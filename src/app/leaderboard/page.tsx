@@ -187,76 +187,82 @@ export default async function LeaderboardPage() {
         /* ── Prize title badges ── */
         .lb-prizes {
           display: flex; align-items: flex-end; justify-content: center;
-          gap: 16px; padding: 28px 20px 32px;
+          gap: 14px; padding: 28px 20px 0;
         }
         .lb-prize-col {
+          width: 190px;
           display: flex; flex-direction: column; align-items: center; gap: 8px;
         }
-        /* Only 1st place moves. When all three pulsed at equal strength there
-           was no winner — the eye had nowhere to land. */
-        @keyframes prizeSheen {
-          0%   { transform: translateX(-140%); }
-          100% { transform: translateX(320%); }
+        /* Only the winner's medal catches light. When all three pulsed equally
+           there was no winner — the eye had nowhere to land. */
+        @keyframes medalShine {
+          0%, 100% { transform: translate(-120%, -120%) rotate(25deg); }
+          55%, 100% { transform: translate(150%, 150%) rotate(25deg); }
         }
-        .lb-title-badge {
-          position: relative; overflow: hidden; border-radius: 12px;
-          display: flex; align-items: stretch; flex-shrink: 0;
-          /* Directional depth — the card sits above the page, it doesn't emit light. */
-          box-shadow: 0 10px 22px -12px rgba(0,0,0,.9), 0 2px 6px -3px rgba(0,0,0,.7);
+        .lb-medal {
+          position: relative; overflow: hidden;
+          width: 54px; height: 54px; border-radius: 50%;
+          display: grid; place-items: center;
+          flex-shrink: 0;
         }
-        /* 1st: bigger, brighter rim, and the only one that catches light. */
-        .lb-title-badge-1 {
-          width: 268px; height: 76px;
-          box-shadow:
-            0 0 0 1px rgba(251,191,36,.55),
-            0 14px 30px -14px rgba(0,0,0,.95),
-            0 6px 20px -10px rgba(251,191,36,.35);
+        .lb-prize-col-1 .lb-medal { width: 68px; height: 68px; }
+        .lb-prize-col-1 .lb-medal::after {
+          content: ""; position: absolute; top: 0; left: 0;
+          width: 46%; height: 220%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent);
+          animation: medalShine 4.5s ease-in-out infinite;
+          pointer-events: none;
         }
-        .lb-title-badge-1::after {
-          content: ""; position: absolute; inset: 0; z-index: 2;
-          width: 34%; pointer-events: none;
-          background: linear-gradient(100deg, transparent, rgba(255,255,255,.13) 50%, transparent);
-          animation: prizeSheen 5.5s ease-in-out infinite;
+        .lb-medal-num {
+          font-weight: 900; font-size: 22px; line-height: 1;
+          font-variant-numeric: tabular-nums;
+          color: #1a1206;
+          text-shadow: 0 1px 0 rgba(255,255,255,.45);
         }
-        /* 2nd and 3rd: quiet. A hairline ring, no animation, no glow. */
-        .lb-title-badge-2 {
-          width: 214px; height: 60px;
-          box-shadow: 0 0 0 1px rgba(203,213,225,.34), 0 10px 22px -12px rgba(0,0,0,.9);
+        .lb-prize-col-1 .lb-medal-num { font-size: 28px; }
+
+        .lb-prize-name {
+          font-weight: 800; font-size: 14px; line-height: 1.25;
+          text-align: center; text-wrap: balance; letter-spacing: -.01em;
         }
-        .lb-title-badge-3 {
-          width: 214px; height: 60px;
-          box-shadow: 0 0 0 1px rgba(205,127,50,.34), 0 10px 22px -12px rgba(0,0,0,.9);
-        }
-        .lb-tbadge-rank {
-          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-          width: 58px; border-right: 1px solid;
-          font-weight: 800; font-size: 22px; font-variant-numeric: tabular-nums;
-          letter-spacing: -.02em;
-        }
-        .lb-title-badge-2 .lb-tbadge-rank,
-        .lb-title-badge-3 .lb-tbadge-rank { width: 50px; font-size: 18px; }
-        /* The title is CONTENT, so it gets the UI font at a readable size.
-           Uppercase + tracking is reserved for the small label underneath. */
-        .lb-tbadge-name {
-          flex: 1; display: flex; align-items: center; justify-content: center;
-          font-weight: 700; font-size: 15px; letter-spacing: -.01em;
-          padding: 0 14px; text-align: center; line-height: 1.25;
-          text-wrap: balance;
-        }
-        .lb-title-badge-2 .lb-tbadge-name,
-        .lb-title-badge-3 .lb-tbadge-name { font-size: 13px; padding: 0 11px; }
+        .lb-prize-col-1 .lb-prize-name { font-size: 17px; }
         .lb-prize-meta {
           font-size: 9px; font-weight: 700;
           letter-spacing: .16em; text-transform: uppercase;
-          color: var(--text3);
         }
+
+        /* The pedestal carries the rank — heights differ, bottoms align. */
+        .lb-pedestal {
+          width: 100%; margin-top: 10px;
+          border: 1px solid; border-bottom: none;
+          border-radius: 10px 10px 0 0;
+          display: grid; place-items: center;
+          position: relative;
+        }
+        .lb-prize-col-1 .lb-pedestal { height: 86px; }
+        .lb-prize-col-2 .lb-pedestal { height: 58px; }
+        .lb-prize-col-3 .lb-pedestal { height: 42px; }
+        .lb-pedestal-rank {
+          font-weight: 900; font-size: 40px; line-height: 1;
+          font-variant-numeric: tabular-nums; user-select: none;
+        }
+        .lb-prize-col-1 .lb-pedestal-rank { font-size: 54px; }
+
         @media (prefers-reduced-motion: reduce) {
-          .lb-title-badge-1::after { animation: none; opacity: .5; }
+          .lb-prize-col-1 .lb-medal::after { animation: none; opacity: 0; }
         }
         @media (max-width: 560px) {
-          .lb-prizes { flex-direction: column; align-items: center; gap: 14px; padding: 24px 16px 22px; }
-          .lb-title-badge-1 { width: min(280px, 90vw); height: 70px; }
-          .lb-title-badge-2, .lb-title-badge-3 { width: min(252px, 90vw); height: 58px; }
+          .lb-prizes { gap: 8px; padding: 24px 12px 0; }
+          .lb-prize-col { width: 33.333%; }
+          .lb-medal { width: 44px; height: 44px; }
+          .lb-prize-col-1 .lb-medal { width: 54px; height: 54px; }
+          .lb-medal-num { font-size: 18px; }
+          .lb-prize-col-1 .lb-medal-num { font-size: 22px; }
+          .lb-prize-name { font-size: 11.5px; }
+          .lb-prize-col-1 .lb-prize-name { font-size: 13px; }
+          .lb-prize-meta { font-size: 8px; letter-spacing: .1em; }
+          .lb-pedestal-rank { font-size: 28px; }
+          .lb-prize-col-1 .lb-pedestal-rank { font-size: 36px; }
         }
 
         /* ── Rows ── */
@@ -551,29 +557,31 @@ export default async function LeaderboardPage() {
             <span className="lb-prizes-title">🏆 призы за сезон</span>
             <div className="lb-prizes-line"/>
           </div>
+        {/* A real podium: columns are bottom-aligned and the pedestal height
+            encodes the rank, so the silhouette alone says who won. The previous
+            version offset the cards by arbitrary margins, which just read as
+            misalignment. */}
         <div className="lb-prizes">
           {([PRIZES_DATA[1], PRIZES_DATA[0], PRIZES_DATA[2]]).map(p => (
-            <div key={p.rank} className="lb-prize-col" style={{
-              marginBottom: p.rank === 1 ? 30 : p.rank === 2 ? 12 : 0,
-            }}>
-              <div className={`lb-title-badge lb-title-badge-${p.rank}`} style={{ background: p.bg }}>
-                {/* The rank chip carries the medal colour; the title stays near-white
-                    so it reads as a name rather than as more glow. */}
-                <div className="lb-tbadge-rank" style={{
-                  color: p.color,
-                  borderColor: `${p.color}33`,
-                  background: `${p.color}12`,
-                  zIndex: 3,
-                }}>
-                  {p.rank}
-                </div>
-                <div className="lb-tbadge-name" style={{ color: p.cx, zIndex: 3 }}>
-                  {p.label}
-                </div>
+            <div key={p.rank} className={`lb-prize-col lb-prize-col-${p.rank}`}>
+              {/* Medal — metallic disc, not a flat swatch */}
+              <div className="lb-medal" style={{
+                background: `radial-gradient(circle at 34% 26%, ${p.cx}, ${p.color} 46%, ${p.color}88 100%)`,
+                boxShadow: `0 0 0 3px ${p.color}22, 0 6px 16px -6px ${p.color}aa, inset 0 -3px 8px rgba(0,0,0,.45), inset 0 2px 6px ${p.cx}88`,
+              }}>
+                <span className="lb-medal-num">{p.rank}</span>
               </div>
-              <span className="lb-prize-meta">
-                {p.rarity} · сезонный титул
-              </span>
+
+              <div className="lb-prize-name" style={{ color: p.cx }}>{p.label}</div>
+              <div className="lb-prize-meta" style={{ color: `${p.color}b0` }}>{p.rarity}</div>
+
+              {/* Pedestal */}
+              <div className="lb-pedestal" style={{
+                background: `linear-gradient(180deg, ${p.color}2e, ${p.color}0d 60%, transparent)`,
+                borderColor: `${p.color}4d`,
+              }}>
+                <span className="lb-pedestal-rank" style={{ color: `${p.color}55` }}>{p.rank}</span>
+              </div>
             </div>
           ))}
         </div>
