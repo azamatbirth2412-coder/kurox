@@ -305,7 +305,10 @@ export function FrameSelector({ currentFrame, currentImage, name, userLevel, isP
             </span>
           </div>
 
-          <div className="grid grid-cols-4 gap-2 w-full">
+          {/* 3 columns below 640px — a fixed 4 squeezed each of the 16 frames
+              (each with its own animated ring) into a target too small to
+              tap precisely or actually see the decoration on. */}
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 w-full">
             {FRAME_IDS.map((frameId) => {
               const required = FRAME_UNLOCKS[frameId] ?? 0;
               const locked = !isAdmin && required > userLevel;
@@ -436,7 +439,7 @@ export function FrameSelector({ currentFrame, currentImage, name, userLevel, isP
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     {items.map((a) => {
                       const unlocked = isAvatarUnlocked(a, userLevel, isPremium, isAdmin);
                       const isApplying = applyingUrl === a.url;
