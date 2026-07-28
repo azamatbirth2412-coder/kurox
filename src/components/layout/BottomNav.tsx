@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Home, Tv, Shuffle, Search, User } from "lucide-react";
+import { Home, Tv, Shuffle, Trophy, User } from "lucide-react";
 import { ProfileFrame } from "@/components/profile/ProfileFrame";
 
 interface Item {
@@ -18,11 +18,17 @@ interface Item {
   match: (path: string) => boolean;
 }
 
+// "Поиск" isn't here on purpose — the header always has a search entry point
+// below this nav's breakpoint (an icon button under 640px, the full bar
+// 640–1024px), so a duplicate here would be dead weight. "Лидерборд" earns
+// the slot instead: below 1024px it previously had NO direct affordance
+// except three taps deep in the hamburger, despite being a core feature
+// (weekly competition, seasonal prizes).
 const ITEMS: Item[] = [
   { href: "/", label: "Главная", icon: Home, match: (p) => p === "/" },
   { href: "/anime", label: "Аниме", icon: Tv, match: (p) => p.startsWith("/anime") || p.startsWith("/genre") },
+  { href: "/leaderboard", label: "Лидерборд", icon: Trophy, match: (p) => p.startsWith("/leaderboard") },
   { href: "/api/random", label: "Случайное", icon: Shuffle, match: () => false },
-  { href: "/search", label: "Поиск", icon: Search, match: (p) => p.startsWith("/search") },
 ];
 
 export function BottomNav() {

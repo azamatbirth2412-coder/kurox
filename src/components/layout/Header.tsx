@@ -358,11 +358,17 @@ export function Header() {
                   {(() => {
                     const t = (session.user as any)?.activeTitle as { key: string; name: string; emoji: string; color: string; rarity: string } | null;
                     if (!t) return null;
+                    // Below `md` the header is already tight (search bar + Рандом +
+                    // avatar + hamburger on one row) — the title pill was the one
+                    // decorative element in that row, and it was what pushed
+                    // everything else into a cramped, overlapping mess.
                     return (
-                      <TitleBadge
-                        name={t.name} emoji={t.emoji} color={t.color}
-                        rarity={t.rarity} titleKey={t.key} size="sm"
-                      />
+                      <span className="hidden md:inline-flex">
+                        <TitleBadge
+                          name={t.name} emoji={t.emoji} color={t.color}
+                          rarity={t.rarity} titleKey={t.key} size="sm"
+                        />
+                      </span>
                     );
                   })()}
                   <ProfileFrame
