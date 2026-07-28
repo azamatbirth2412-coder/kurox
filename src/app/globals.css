@@ -227,17 +227,30 @@ h1, h2, h3 { text-wrap: balance; }
   to   { transform: scaleX(1); }
 }
 
-/* ── Horizontal scroll row ── */
+/* ── Hide scrollbar, keep native scroll ──
+   Was already referenced on SimilarRow and the anime detail page, but never
+   actually defined — those rows have shown a bare native scrollbar all along
+   with no one noticing. Defined here once, for every carousel on the site. */
+.scrollbar-hide {
+  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;  /* old Edge/IE */
+}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* ── Horizontal scroll row ──
+   A visible track+thumb reads as a raw browser control sitting on top of a
+   curated row of posters — SimilarRow already hides it (or tried to); this
+   matches that, so every carousel on the site behaves the same way. Touch
+   drag and the horizontal-scroll gesture still work with no visible chrome. */
 .h-scroll {
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  padding-bottom: 6px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border2) transparent;
+  padding-bottom: 4px; /* matches SimilarRow's own pb-1 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-.h-scroll::-webkit-scrollbar { height: 4px; }
-.h-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+.h-scroll::-webkit-scrollbar { display: none; }
 
 /* ── Badge ── */
 .badge {
