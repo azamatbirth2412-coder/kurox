@@ -8,13 +8,16 @@ import { Users, Trophy, Flame, ArrowUp, Zap, Film } from "lucide-react";
 
 export const metadata: Metadata = { title: "Лидерборд — Kurox" };
 
+// Gold / silver / bronze: the podium reads at a glance, without a legend.
+// The previous green/red/violet set carried no rank meaning — the eye had to
+// fall back to the "№N" text to work out the order.
 const PRIZES_DATA = [
   { rank: 1, label: "Легенда сезона",   rarity: "Легендарный",
-    color: "#39ff14", cx: "#aaff88", bg: "linear-gradient(148deg,#010a01,#000601)" },
+    color: "#fbbf24", cx: "#fde68a", bg: "linear-gradient(150deg,#241a06,#100b02)" },
   { rank: 2, label: "Вице-чемпион",     rarity: "Эпический",
-    color: "#ff2244", cx: "#ff8899", bg: "linear-gradient(148deg,#0a0103,#050001)" },
+    color: "#cbd5e1", cx: "#f1f5f9", bg: "linear-gradient(150deg,#1a1d22,#0c0e11)" },
   { rank: 3, label: "Бронзовый призёр", rarity: "Редкий",
-    color: "#a855f7", cx: "#d8b4fe", bg: "linear-gradient(148deg,#05010a,#020006)" },
+    color: "#cd7f32", cx: "#edb887", bg: "linear-gradient(150deg,#231407,#100902)" },
 ];
 
 type User = {
@@ -189,54 +192,71 @@ export default async function LeaderboardPage() {
         .lb-prize-col {
           display: flex; flex-direction: column; align-items: center; gap: 8px;
         }
-        @keyframes titleBadgeScan {
-          0%   { left: -70%; opacity: 0; }
-          10%  { opacity: 1; }
-          90%  { opacity: 1; }
-          100% { left: 130%; opacity: 0; }
-        }
-        @keyframes titlePulse1 {
-          0%,100% { box-shadow: 0 0 0 1px rgba(57,255,20,.40), 0 0 22px rgba(57,255,20,.30), 0 0 50px rgba(57,255,20,.10); }
-          50%      { box-shadow: 0 0 0 2px rgba(57,255,20,.80), 0 0 40px rgba(57,255,20,.56), 0 0 90px rgba(57,255,20,.22); }
-        }
-        @keyframes titlePulse2 {
-          0%,100% { box-shadow: 0 0 0 1px rgba(255,34,68,.34), 0 0 18px rgba(255,34,68,.24), 0 0 44px rgba(255,34,68,.09); }
-          50%      { box-shadow: 0 0 0 2px rgba(255,34,68,.72), 0 0 34px rgba(255,34,68,.48), 0 0 76px rgba(255,34,68,.18); }
-        }
-        @keyframes titlePulse3 {
-          0%,100% { box-shadow: 0 0 0 1px rgba(168,85,247,.32), 0 0 18px rgba(168,85,247,.22), 0 0 44px rgba(168,85,247,.09); }
-          50%      { box-shadow: 0 0 0 2px rgba(168,85,247,.68), 0 0 34px rgba(168,85,247,.46), 0 0 76px rgba(168,85,247,.18); }
+        /* Only 1st place moves. When all three pulsed at equal strength there
+           was no winner — the eye had nowhere to land. */
+        @keyframes prizeSheen {
+          0%   { transform: translateX(-140%); }
+          100% { transform: translateX(320%); }
         }
         .lb-title-badge {
-          position: relative; overflow: hidden; border-radius: 10px;
+          position: relative; overflow: hidden; border-radius: 12px;
           display: flex; align-items: stretch; flex-shrink: 0;
+          /* Directional depth — the card sits above the page, it doesn't emit light. */
+          box-shadow: 0 10px 22px -12px rgba(0,0,0,.9), 0 2px 6px -3px rgba(0,0,0,.7);
         }
-        .lb-title-badge-1 { width: 238px; height: 62px; animation: titlePulse1 2.5s ease-in-out infinite; }
-        .lb-title-badge-2 { width: 206px; height: 52px; animation: titlePulse2 2.5s ease-in-out infinite .5s; }
-        .lb-title-badge-3 { width: 206px; height: 52px; animation: titlePulse3 2.5s ease-in-out infinite 1s; }
+        /* 1st: bigger, brighter rim, and the only one that catches light. */
+        .lb-title-badge-1 {
+          width: 268px; height: 76px;
+          box-shadow:
+            0 0 0 1px rgba(251,191,36,.55),
+            0 14px 30px -14px rgba(0,0,0,.95),
+            0 6px 20px -10px rgba(251,191,36,.35);
+        }
+        .lb-title-badge-1::after {
+          content: ""; position: absolute; inset: 0; z-index: 2;
+          width: 34%; pointer-events: none;
+          background: linear-gradient(100deg, transparent, rgba(255,255,255,.13) 50%, transparent);
+          animation: prizeSheen 5.5s ease-in-out infinite;
+        }
+        /* 2nd and 3rd: quiet. A hairline ring, no animation, no glow. */
+        .lb-title-badge-2 {
+          width: 214px; height: 60px;
+          box-shadow: 0 0 0 1px rgba(203,213,225,.34), 0 10px 22px -12px rgba(0,0,0,.9);
+        }
+        .lb-title-badge-3 {
+          width: 214px; height: 60px;
+          box-shadow: 0 0 0 1px rgba(205,127,50,.34), 0 10px 22px -12px rgba(0,0,0,.9);
+        }
         .lb-tbadge-rank {
           display: flex; align-items: center; justify-content: center; flex-shrink: 0;
           width: 58px; border-right: 1px solid;
-          font-family: 'Courier New', monospace; font-weight: 900; font-size: 20px;
+          font-weight: 800; font-size: 22px; font-variant-numeric: tabular-nums;
+          letter-spacing: -.02em;
         }
         .lb-title-badge-2 .lb-tbadge-rank,
-        .lb-title-badge-3 .lb-tbadge-rank { width: 50px; font-size: 17px; }
+        .lb-title-badge-3 .lb-tbadge-rank { width: 50px; font-size: 18px; }
+        /* The title is CONTENT, so it gets the UI font at a readable size.
+           Uppercase + tracking is reserved for the small label underneath. */
         .lb-tbadge-name {
           flex: 1; display: flex; align-items: center; justify-content: center;
-          font-family: 'Courier New', monospace; font-weight: 800; font-size: 12.5px;
-          letter-spacing: .06em; text-transform: uppercase;
-          padding: 0 12px; text-align: center; line-height: 1.25;
+          font-weight: 700; font-size: 15px; letter-spacing: -.01em;
+          padding: 0 14px; text-align: center; line-height: 1.25;
+          text-wrap: balance;
         }
         .lb-title-badge-2 .lb-tbadge-name,
-        .lb-title-badge-3 .lb-tbadge-name { font-size: 11px; padding: 0 10px; }
+        .lb-title-badge-3 .lb-tbadge-name { font-size: 13px; padding: 0 11px; }
         .lb-prize-meta {
-          font-family: 'Courier New', monospace; font-size: 9px; font-weight: 700;
-          letter-spacing: .18em; text-transform: uppercase; opacity: .62;
+          font-size: 9px; font-weight: 700;
+          letter-spacing: .16em; text-transform: uppercase;
+          color: var(--text3);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .lb-title-badge-1::after { animation: none; opacity: .5; }
         }
         @media (max-width: 560px) {
           .lb-prizes { flex-direction: column; align-items: center; gap: 14px; padding: 24px 16px 22px; }
-          .lb-title-badge-1 { width: min(270px, 90vw); }
-          .lb-title-badge-2, .lb-title-badge-3 { width: min(248px, 90vw); height: 50px; }
+          .lb-title-badge-1 { width: min(280px, 90vw); height: 70px; }
+          .lb-title-badge-2, .lb-title-badge-3 { width: min(252px, 90vw); height: 58px; }
         }
 
         /* ── Rows ── */
@@ -537,46 +557,21 @@ export default async function LeaderboardPage() {
               marginBottom: p.rank === 1 ? 30 : p.rank === 2 ? 12 : 0,
             }}>
               <div className={`lb-title-badge lb-title-badge-${p.rank}`} style={{ background: p.bg }}>
-                {/* scan sweep */}
-                <div style={{
-                  position: "absolute", top: 0, left: "-70%", width: "38%", height: "100%",
-                  background: "linear-gradient(90deg,transparent,rgba(255,255,255,.07) 50%,transparent)",
-                  animation: "titleBadgeScan 4.8s ease-in-out infinite",
-                  pointerEvents: "none", zIndex: 2,
-                }}/>
-                {/* subtle circuit traces */}
-                <svg style={{ position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none", zIndex:1 }}
-                  viewBox="0 0 238 62" preserveAspectRatio="none">
-                  <path d="M178 5 L205 5 L215 15" fill="none" stroke={p.color} strokeWidth="0.8" strokeOpacity="0.28"/>
-                  <path d="M23 57 L50 57 L60 47"  fill="none" stroke={p.color} strokeWidth="0.8" strokeOpacity="0.20"/>
-                  <circle cx="205" cy="5"  r="2"   fill={p.color} fillOpacity="0.26"/>
-                  <circle cx="50"  cy="57" r="1.5" fill={p.color} fillOpacity="0.18"/>
-                  <circle cx="195" cy="32" r="1"   fill={p.color} fillOpacity="0.14"/>
-                  <circle cx="38"  cy="26" r="1"   fill={p.color} fillOpacity="0.11"/>
-                  <path d="M218 28 L230 28 L230 52" fill="none" stroke={p.color} strokeWidth="0.7" strokeOpacity="0.16"/>
-                  <circle cx="230" cy="52" r="1.5" fill={p.color} fillOpacity="0.14"/>
-                  <path d="M8 10 L8 22 L18 22"   fill="none" stroke={p.color} strokeWidth="0.7" strokeOpacity="0.16"/>
-                  <circle cx="8"  cy="10" r="1.5" fill={p.color} fillOpacity="0.14"/>
-                </svg>
-                {/* rank №N */}
+                {/* The rank chip carries the medal colour; the title stays near-white
+                    so it reads as a name rather than as more glow. */}
                 <div className="lb-tbadge-rank" style={{
-                  color: p.cx,
-                  borderColor: `${p.color}44`,
-                  textShadow: `0 0 14px ${p.color}, 0 0 30px ${p.color}99`,
+                  color: p.color,
+                  borderColor: `${p.color}33`,
+                  background: `${p.color}12`,
                   zIndex: 3,
                 }}>
-                  №{p.rank}
+                  {p.rank}
                 </div>
-                {/* title name */}
-                <div className="lb-tbadge-name" style={{
-                  color: p.cx,
-                  textShadow: `0 0 10px ${p.color}, 0 0 22px ${p.color}77`,
-                  zIndex: 3,
-                }}>
+                <div className="lb-tbadge-name" style={{ color: p.cx, zIndex: 3 }}>
                   {p.label}
                 </div>
               </div>
-              <span className="lb-prize-meta" style={{ color: p.color }}>
+              <span className="lb-prize-meta">
                 {p.rarity} · сезонный титул
               </span>
             </div>
