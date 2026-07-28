@@ -22,10 +22,16 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
+// Mirrors CardRow's own layout (defined below) so streaming the real content
+// in over this placeholder doesn't reflow the page.
 function SkeletonRow({ count = 7 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3">
-      {Array.from({ length: count }).map((_, i) => <AnimeCardSkeleton key={i} />)}
+    <div className="h-scroll">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex-shrink-0 w-[128px] sm:w-[148px] md:w-[168px] lg:w-[188px]">
+          <AnimeCardSkeleton />
+        </div>
+      ))}
     </div>
   );
 }
@@ -138,33 +144,41 @@ async function HeroBanner() {
   return <HeroBannerSlider items={items} />;
 }
 
-async function TrendingRow() {
-  const list = await getTrendingCached();
+// Fixed-width horizontal carousel — the row component all home sections share.
+// They used to be `grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7`,
+// but each section's item count (7, 14, or whatever survives a filter) rarely
+// divides evenly by the active breakpoint's column count. A grid reserves the
+// leftover tracks as real empty cells — visually indistinguishable from "no
+// anime here" — which is exactly the bug reported: rows appeared to just stop
+// partway through with blank space instead of scrolling further. A row is
+// scrolled, not paginated, so it should never have a "leftover" case at all.
+function CardRow({ items }: { items: ReturnType<typeof toCard>[] }) {
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3">
-      {list.map(a => <AnimeCard key={a.id} {...toCard(a)} />)}
+    <div className="h-scroll">
+      {items.map(item => (
+        <div key={item.id} className="flex-shrink-0 w-[128px] sm:w-[148px] md:w-[168px] lg:w-[188px]">
+          <AnimeCard {...item} />
+        </div>
+      ))}
     </div>
   );
+}
+
+async function TrendingRow() {
+  const list = await getTrendingCached();
+  return <CardRow items={list.map(toCard)} />;
 }
 
 async function ScheduleRow() {
   const list = await getSchedule();
   const unique = Array.from(new Map(list.map(a => [a.id, a])).values()).slice(0, 7);
   if (!unique.length) return null;
-  return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3">
-      {unique.map(a => <AnimeCard key={a.id} {...toCard(a)} />)}
-    </div>
-  );
+  return <CardRow items={unique.map(toCard)} />;
 }
 
 async function OngoingRow() {
   const { data } = await getOngoingPage(0, 14);
-  return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3">
-      {data.slice(0, 14).map(a => <AnimeCard key={a.id} {...toCard(a)} />)}
-    </div>
-  );
+  return <CardRow items={data.slice(0, 14).map(toCard)} />;
 }
 
 async function PopularRow() {
@@ -174,11 +188,7 @@ async function PopularRow() {
   // Fetch more to have enough after filtering
   const all = await getPopular(0, 28);
   const list = all.filter(a => !trendingIds.has(a.id)).slice(0, 14);
-  return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3">
-      {list.map(a => <AnimeCard key={a.id} {...toCard(a)} />)}
-    </div>
-  );
+  return <CardRow items={list.map(toCard)} />;
 }
 
 // Rotates a pool daily — different 7 items each calendar day
@@ -193,22 +203,14 @@ async function NewReleasesRow() {
   const pool = await getNewReleases(42);
   const list = dailyPick(pool, 7);
   if (!list.length) return null;
-  return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3">
-      {list.map(a => <AnimeCard key={a.id} {...toCard(a)} />)}
-    </div>
-  );
+  return <CardRow items={list.map(toCard)} />;
 }
 
 async function ClassicsRow() {
   const pool = await getClassics(42);
   const list = dailyPick(pool, 7);
   if (!list.length) return null;
-  return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3">
-      {list.map(a => <AnimeCard key={a.id} {...toCard(a)} />)}
-    </div>
-  );
+  return <CardRow items={list.map(toCard)} />;
 }
 
 
